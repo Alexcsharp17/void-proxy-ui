@@ -1,0 +1,123 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-label: "Space Grotesk", sans-serif;
+
+  --color-bg-main: var(--bg-main);
+  --color-bg-sidebar: var(--bg-sidebar);
+  --color-bg-panel: var(--bg-panel);
+  --color-bg-input: var(--bg-input);
+  
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  
+  --color-border-main: var(--border-color);
+  --color-border-hover: var(--border-hover);
+  
+  --color-accent-primary: var(--accent-primary);
+  --color-accent-secondary: var(--accent-secondary);
+}
+
+@layer base {
+  :root {
+    --bg-main: #0b0b0d;
+    --bg-sidebar: #0b0b0d;
+    --bg-panel: #1c1b1d;
+    --bg-input: #0e0e10;
+    --text-primary: #e5e1e4;
+    --text-secondary: #c3c5d7;
+    --text-muted: #8d90a0;
+    --border-color: rgba(67, 70, 84, 0.1);
+    --border-hover: rgba(100, 138, 255, 0.3);
+    --accent-primary: #648aff;
+    --accent-secondary: #00ff9d;
+  }
+
+  :root.light {
+    --bg-main: #f4f4f7;
+    --bg-sidebar: #ffffff;
+    --bg-panel: #ffffff;
+    --bg-input: #f8f8fa;
+    --text-primary: #0b0b0d;
+    --text-secondary: #434654;
+    --text-muted: #8d90a0;
+    --border-color: rgba(67, 70, 84, 0.1);
+    --border-hover: rgba(79, 124, 255, 0.3);
+    --accent-primary: #4f7cff;
+    --accent-secondary: #00d680;
+  }
+
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    @apply antialiased transition-colors duration-300;
+  }
+
+  /* Keep input/textarea background dark on hover, focus and autofill (no white) */
+  input,
+  textarea {
+    background-color: var(--bg-input) !important;
+  }
+  input:hover,
+  textarea:hover,
+  input:focus,
+  textarea:focus {
+    background-color: var(--bg-input) !important;
+    outline: none;
+  }
+  /* Chrome/Safari autofill: force dark background (box-shadow overrides their fill) */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active,
+  textarea:-webkit-autofill,
+  textarea:-webkit-autofill:hover,
+  textarea:-webkit-autofill:focus,
+  textarea:-webkit-autofill:active {
+    -webkit-text-fill-color: var(--text-primary) !important;
+    -webkit-box-shadow: 0 0 0 1000px var(--bg-input) inset !important;
+    box-shadow: 0 0 0 1000px var(--bg-input) inset !important;
+    background-color: var(--bg-input) !important;
+    transition: background-color 5000s ease-in-out 0s, color 5000s ease-in-out 0s;
+  }
+
+  /* Custom scrollbar for a cleaner look */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    background-color: var(--bg-panel);
+    @apply backdrop-blur-xl border border-border-main;
+  }
+
+  /* Auth forms: force dark input background (hover + autofill) */
+  .auth-form input,
+  .auth-form textarea {
+    background-color: var(--bg-input) !important;
+  }
+  .auth-form input:hover,
+  .auth-form input:focus,
+  .auth-form textarea:hover,
+  .auth-form textarea:focus {
+    background-color: var(--bg-input) !important;
+  }
+  .auth-form input:-webkit-autofill,
+  .auth-form input:-webkit-autofill:hover,
+  .auth-form input:-webkit-autofill:focus,
+  .auth-form input:-webkit-autofill:active {
+    -webkit-text-fill-color: var(--text-primary) !important;
+    -webkit-box-shadow: 0 0 0 1000px var(--bg-input) inset !important;
+    box-shadow: 0 0 0 1000px var(--bg-input) inset !important;
+    background-color: var(--bg-input) !important;
+  }
+}

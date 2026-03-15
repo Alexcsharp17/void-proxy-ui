@@ -1,0 +1,296 @@
+{
+  "privacy": {
+    "title": "Privacy Policy",
+    "lastUpdated": "Last updated: December 2024",
+    "introduction": {
+      "title": "Introduction",
+      "text1": "At VOID SMM, we are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our social media management platform.",
+      "text2": "By using our services, you agree to the collection and use of information in accordance with this policy. If you do not agree with our policies and practices, please do not use our services."
+    },
+    "informationWeCollect": {
+      "title": "Information We Collect",
+      "personalInformation": {
+        "title": "Personal Information",
+        "items": [
+          "Name and contact information (email address)",
+          "Account credentials and authentication data",
+          "Payment information and billing details",
+          "Profile information and preferences"
+        ]
+      },
+      "usageInformation": {
+        "title": "Usage Information",
+        "items": [
+          "Platform usage statistics and analytics",
+          "Device information and browser data",
+          "IP address and location data",
+          "Social media account data (with your permission)"
+        ]
+      }
+    },
+    "howWeUse": {
+      "title": "How We Use Your Information",
+      "items": [
+        "To provide and maintain our services",
+        "To process payments and manage your account",
+        "To communicate with you about our services",
+        "To improve our platform and develop new features",
+        "To ensure security and prevent fraud",
+        "To comply with legal obligations"
+      ]
+    },
+    "dataSecurity": {
+      "title": "Data Security",
+      "text": "We implement appropriate technical and organizational security measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction. These measures include:",
+      "items": [
+        "End-to-end encryption for sensitive data",
+        "Regular security audits and assessments",
+        "Secure data storage and transmission protocols",
+        "Access controls and authentication systems"
+      ]
+    },
+    "yourRights": {
+      "title": "Your Rights",
+      "text": "You have the following rights regarding your personal information:",
+      "items": [
+        "Right to access your personal data",
+        "Right to rectify inaccurate information",
+        "Right to erase your personal data",
+        "Right to restrict processing of your data",
+        "Right to data portability",
+        "Right to object to processing"
+      ]
+    },
+    "contact": {
+      "title": "Contact Us",
+      "text": "If you have any questions about this Privacy Policy or our data practices, please contact us:",
+      "email": "Email: void.panel.team+support@gmail.com"
+    },
+    "changes": {
+      "title": "Changes to This Policy",
+      "text": "We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the \"Last updated\" date. You are advised to review this Privacy Policy periodically for any changes."
+    }
+  },
+  "terms": {
+    "title": "Terms of Service",
+    "lastUpdated": "Last updated: December 2024",
+    "agreement": {
+      "title": "Agreement to Terms",
+      "text1": "These Terms of Service (\"Terms\") govern your use of the VOID SMM platform and services. By accessing or using our services, you agree to be bound by these Terms.",
+      "text2": "If you do not agree to these Terms, please do not use our services. We reserve the right to modify these Terms at any time, and your continued use of our services constitutes acceptance of any changes."
+    },
+    "serviceDescription": {
+      "title": "Service Description",
+      "text": "VOID SMM provides a comprehensive social media management platform that includes:",
+      "items": [
+        "Social media account management and automation",
+        "Content scheduling and publishing tools",
+        "Analytics and reporting features",
+        "Order management and processing",
+        "Channel monitoring and health checks"
+      ]
+    },
+    "userAccounts": {
+      "title": "User Accounts",
+      "accountCreation": {
+        "title": "Account Creation",
+        "text": "To use our services, you must create an account and provide accurate, complete information. You are responsible for maintaining the confidentiality of your account credentials."
+      },
+      "accountResponsibilities": {
+        "title": "Account Responsibilities",
+        "items": [
+          "You are responsible for all activities under your account",
+          "You must notify us immediately of any unauthorized use",
+          "You may not share your account with others"
+        ]
+      }
+    },
+    "acceptableUse": {
+      "title": "Acceptable Use Policy",
+      "text": "You agree to use our services only for lawful purposes and in accordance with these Terms. You may not:",
+      "items": [
+        "Violate any applicable laws or regulations",
+        "Infringe on intellectual property rights",
+        "Transmit harmful or malicious content",
+        "Attempt to gain unauthorized access to our systems",
+        "Use our services for spam or fraudulent activities",
+        "Interfere with the proper functioning of our services"
+      ]
+    },
+    "paymentTerms": {
+      "title": "Payment Terms",
+      "billing": {
+        "title": "Billing",
+        "text": "Payment is required in advance for all services. All fees are non-refundable unless otherwise specified in our refund policy."
+      },
+      "refunds": {
+        "title": "Refunds",
+        "text": "Refunds are provided only in cases of service failure or technical issues on our end. Refund requests must be submitted within 30 days of the original purchase."
+      }
+    },
+    "financialTransactions": {
+      "title": "Financial Transactions & AML",
+      "scope": {
+        "title": "Scope",
+        "text": "The Service may accept payments in fiat or cryptocurrencies. VOID SMM is a non-custodial platform, and all digital assets are sent directly to your wallet. The Service does not hold users' funds."
+      },
+      "riskBased": {
+        "title": "Risk-Based Approach",
+        "text": "The Service applies a risk-based approach to monitoring transactions, proportionate to its size and stage of development. The focus is on identifying higher-risk activities, such as unusually large payments, repeated transactions inconsistent with normal service usage, or transactions linked to high-risk blockchain indicators."
+      },
+      "suspiciousActivity": {
+        "title": "Actions on Suspicious Activity",
+        "text": "In case of suspicious activity, the Service reserves the right to:",
+        "items": [
+          "suspend or delay service provision",
+          "request additional information",
+          "issue refunds where technically possible",
+          "report activity where legally required"
+        ]
+      },
+      "compliance": {
+        "title": "Compliance with Applicable Laws",
+        "text": "The Service aims to comply with applicable laws and regulations related to anti-money laundering (AML) and counter-terrorist financing (CTF) to the extent possible given its stage as a startup."
+      }
+    },
+    "intellectualProperty": {
+      "title": "Intellectual Property",
+      "text1": "The VOID SMM platform and all its content, features, and functionality are owned by VOID SMM and are protected by international copyright, trademark, and other intellectual property laws.",
+      "text2": "You may not copy, modify, distribute, sell, or lease any part of our services without our express written permission."
+    },
+    "limitationOfLiability": {
+      "title": "Limitation of Liability",
+      "text": "To the maximum extent permitted by law, VOID SMM shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including but not limited to loss of profits, data, or use, arising out of or relating to your use of our services."
+    },
+    "termination": {
+      "title": "Termination",
+      "text1": "We may terminate or suspend your account immediately, without prior notice, for any reason, including if you breach these Terms.",
+      "text2": "Upon termination, your right to use our services will cease immediately, and we may delete your account and data."
+    },
+    "contact": {
+      "title": "Contact Information",
+      "text": "If you have any questions about these Terms of Service, please contact us:",
+      "email": "Email: void.panel.team+support@gmail.com"
+    }
+  },
+  "cookies": {
+    "title": "Cookie Policy",
+    "lastUpdated": "Last updated: December 2024",
+    "whatAreCookies": {
+      "title": "What Are Cookies",
+      "text1": "Cookies are small text files that are stored on your device when you visit our website. They help us provide you with a better experience by remembering your preferences and enabling certain functionality.",
+      "text2": "This Cookie Policy explains how VOID SMM uses cookies and similar technologies on our platform and how you can control them."
+    },
+    "typesOfCookies": {
+      "title": "Types of Cookies We Use",
+      "essential": {
+        "title": "Essential Cookies",
+        "text": "These cookies are necessary for the website to function properly. They enable basic functions like page navigation, access to secure areas, and authentication.",
+        "items": [
+          "Session management cookies",
+          "Authentication cookies",
+          "Security cookies",
+          "Load balancing cookies"
+        ]
+      },
+      "performance": {
+        "title": "Performance Cookies",
+        "text": "These cookies collect information about how visitors use our website, helping us improve performance and user experience.",
+        "items": [
+          "Analytics cookies (Google Analytics)",
+          "Performance monitoring cookies",
+          "Error tracking cookies"
+        ]
+      },
+      "functional": {
+        "title": "Functional Cookies",
+        "text": "These cookies enable enhanced functionality and personalization, such as remembering your preferences and settings.",
+        "items": [
+          "Language preference cookies",
+          "Theme and display settings",
+          "User interface preferences"
+        ]
+      },
+      "marketing": {
+        "title": "Marketing Cookies",
+        "text": "These cookies are used to track visitors across websites to display relevant and engaging advertisements.",
+        "items": [
+          "Advertising cookies",
+          "Social media cookies",
+          "Retargeting cookies"
+        ]
+      }
+    },
+    "howWeUse": {
+      "title": "How We Use Cookies",
+      "items": [
+        "To ensure our website functions properly",
+        "To remember your login status and preferences",
+        "To analyze website traffic and usage patterns",
+        "To improve our services and user experience",
+        "To provide personalized content and features",
+        "To detect and prevent fraud and security threats"
+      ]
+    },
+    "thirdParty": {
+      "title": "Third-Party Cookies",
+      "text1": "We may use third-party services that set their own cookies. These include:",
+      "items": [
+        "Google Analytics: For website analytics and performance monitoring",
+        "Social Media Platforms: For social sharing and integration features",
+        "Payment Processors: For secure payment processing",
+        "Customer Support: For live chat and support functionality"
+      ],
+      "text2": "These third parties have their own privacy policies and cookie practices. We recommend reviewing their policies for more information."
+    },
+    "managing": {
+      "title": "Managing Your Cookie Preferences",
+      "text": "You have several options for managing cookies:",
+      "browserSettings": {
+        "title": "Browser Settings",
+        "text": "Most web browsers allow you to control cookies through their settings. You can:",
+        "items": [
+          "Block all cookies",
+          "Block third-party cookies only",
+          "Delete existing cookies",
+          "Set up notifications for new cookies"
+        ]
+      },
+      "ourSettings": {
+        "title": "Our Cookie Settings",
+        "text": "You can manage your cookie preferences through our cookie settings panel, accessible from the footer of our website."
+      }
+    },
+    "duration": {
+      "title": "Cookie Duration",
+      "text": "Cookies have different lifespans:",
+      "items": [
+        "Session Cookies: Deleted when you close your browser",
+        "Persistent Cookies: Remain on your device for a set period",
+        "First-Party Cookies: Set by our website directly",
+        "Third-Party Cookies: Set by external services"
+      ]
+    },
+    "impact": {
+      "title": "Impact of Disabling Cookies",
+      "text": "If you disable cookies, some features of our website may not function properly:",
+      "items": [
+        "You may need to log in repeatedly",
+        "Your preferences may not be saved",
+        "Some interactive features may not work",
+        "Personalized content may not be available"
+      ]
+    },
+    "updates": {
+      "title": "Updates to This Policy",
+      "text1": "We may update this Cookie Policy from time to time to reflect changes in our practices or for other operational, legal, or regulatory reasons.",
+      "text2": "We will notify you of any material changes by posting the updated policy on our website and updating the \"Last updated\" date."
+    },
+    "contact": {
+      "title": "Contact Us",
+      "text": "If you have any questions about our use of cookies, please contact us:",
+      "email": "Email: void.panel.team+support@gmail.com"
+    }
+  }
+}
+

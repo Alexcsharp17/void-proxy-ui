@@ -1,0 +1,197 @@
+{
+  "heroTitle": "VOID PROXY",
+  "heroSubtitle": "Premium proxies with 100+ countries, unlimited bandwidth, and full customization. Perfect for automation, scraping & multi-account workflows.",
+  "badges": {
+    "datacenter": "DATACENTER",
+    "residential": "RESIDENTIAL",
+    "unlimited": "UNLIMITED",
+    "countries": "100+ COUNTRIES"
+  },
+  "title": "Premium Proxies",
+  "subtitle": "High-quality residential and mobile proxies from Vietnam and USA",
+  "features": {
+    "wideCountrySelection": {
+      "title": "One product — all tasks",
+      "description": "Suitable for automation, accounts, scraping and analytics."
+    },
+    "fullCustomization": {
+      "title": "Full Customization",
+      "description": "Customize connection strings with region, city, session, and TTL parameters. Full control over proxy behavior."
+    },
+    "highSpeedAutomation": {
+      "title": "Best prices on the market",
+      "description": "Optimized for high volume. The more traffic — the lower the price."
+    }
+  },
+  "stats": {
+    "uptime": "Uptime last 90 days",
+    "countries": "Available countries",
+    "ips": "Total IPs",
+    "speedFrom": "from {{speed}} Mbps",
+    "throughput": "Typical throughput per line"
+  },
+  "useCasesTitle": "What Can You Use Our Proxies For?",
+  "useCases": {
+    "accountCreation": {
+      "title": "Account Creation",
+      "description": "Create and verify accounts on major apps and sites — rotating 4G IPs reduce flags and keep sessions stable."
+    },
+    "automationBots": {
+      "title": "Automation & Bots",
+      "description": "Run social media bots, scraping tools, sneaker bots, crypto trading bots, SEO monitoring, and RPA workflows with stable, rotating IPs."
+    },
+    "marketingGrowth": {
+      "title": "Marketing & Growth",
+      "description": "Manage multiple ad accounts, post scheduling, influencer outreach, lead generation, and multi-region campaigns without triggering bans."
+    },
+    "bypassGeo": {
+      "title": "Bypass Geo-Restrictions",
+      "description": "Access region-locked services, streaming platforms, and websites as if you were browsing locally from the target country."
+    },
+    "ecommerce": {
+      "title": "E-commerce Tools",
+      "description": "Monitor competitor prices, check stock availability, test regional promotions, and manage multiple store accounts."
+    },
+    "dataCollection": {
+      "title": "Data Collection",
+      "description": "Perform large-scale scraping, research, and analytics without IP blacklisting — ideal for academics, businesses, and agencies."
+    }
+  },
+  "faqTitle": "Frequently Asked Questions",
+  "faq": {
+    "whatToChoose": {
+      "question": "Not sure what to choose?",
+      "answer": "Choose GB Proxies if you have many requests and price per volume matters. Choose Unlimited if you need long sessions, high speed, and 24/7 operation."
+    },
+    "threads": {
+      "question": "How many threads can I run?",
+      "answer": "Typically 50–150, depending on your workload and tools."
+    },
+    "customize": {
+      "question": "Can I customize connection settings?",
+      "answer": "Yes — you can customize region, city, session, and TTL parameters directly in the connection string."
+    },
+    "protocols": {
+      "question": "What protocols do you support?",
+      "answer": "We support HTTP, HTTPS, SOCKS5, HTTP/3, and UDP-based traffic where applicable. Our infrastructure is optimized for modern protocols, low-latency routing, automatic failover, and load balancing."
+    },
+    "logs": {
+      "question": "Do you keep logs of my activity?",
+      "answer": "No, we maintain a strict zero-logs policy. We don't store, monitor, or log any of your browsing activity or data. We only keep minimal connection metadata for service optimization and billing purposes, which is automatically deleted after 30 days."
+    },
+    "refunds": {
+      "question": "Do you offer refunds?",
+      "answer": "Yes, we offer a 7-day money-back guarantee for all plans."
+    },
+    "countries": {
+      "question": "What countries are available?",
+      "answer": "We support 100+ countries including US, UK, Germany, France, Italy, Spain, Netherlands, and many more. Check available countries in the API documentation."
+    },
+    "tryBefore": {
+      "question": "Can I try proxies before purchasing?",
+      "answer": "Yes! You can test basic functionality. For production use, we recommend our premium plans."
+    },
+    "apiDocs": {
+      "question": "Where can I find API documentation?",
+      "answer": "You can find detailed API documentation, including connection string customization, available countries, and integration examples in our <a href=\"/api-docs\" style=\"color: #2F6CFF; text-decoration: underline;\">API Documentation</a> section."
+    }
+  },
+  "placeOrder": "Place Order",
+  "selectPackage": "Choose Your Plan",
+  "buyNow": "Buy Now",
+  "unlimited": "Unlimited",
+  "residential": "Residential",
+  "mobile": "Mobile",
+  "from": "from",
+  "per": "per",
+  "loading": "Loading proxies...",
+  "error": "Failed to load proxies",
+  "noProxies": "No Active Proxy Products",
+  "noProxiesDescription": "No active proxy products are currently available. Please check back later.",
+  "proxyCard": {
+    "availablePackages": "Available Packages",
+    "availablePackagesWithSlots": "Available packages ({{count}} slots)",
+    "basePricePerUnit": "Base Price (Per Unit)",
+    "perUnit": "per unit",
+    "volumeTier": "Volume Tier",
+    "recommended": "⭐ Recommended",
+    "order": "Order",
+    "subCredentialsSlots": "Up to {{count}} slots per order",
+    "slotsShort": "slots",
+    "slotsCount": "{{count}} slots"
+  },
+  "dashboardPlaceholder": "Dashboard content coming soon.",
+  "dashboardStatusOk": "User info loaded successfully",
+  "dashboardStatusError": "Failed to load data",
+  "dashboardBalance": "Balance",
+  "dashboardGbRemaining": "GB Remaining",
+  "dashboardGbUsed": "GB Used",
+  "dashboardUsedLabel": "Used",
+  "dashboardRemainingLabel": "Remaining",
+  "dashboardLeftLabel": "Left",
+  "dashboardUsageOverview": "Usage Overview",
+  "dashboardPurchaseGb": "Purchase GB",
+  "dashboardUsed": "Used",
+  "dashboardTotalPurchased": "Total Purchased",
+  "dashboardGettingStarted": "Getting Started",
+  "dashboardAddFunds": "Add Funds",
+  "dashboardAddFundsDesc": "Deposit crypto to your account",
+  "dashboardBuyGb": "Buy GB",
+  "dashboardBuyGbDesc": "Purchase bandwidth for proxies",
+  "dashboardGenerateProxies": "Generate Proxies",
+  "dashboardGenerateProxiesDesc": "Create your proxy list",
+  "dashboardUnlimitedBandwidth": "Unlimited Bandwidth",
+  "dashboardUnlimitedDesc": "No bandwidth limits, dedicated nodes",
+  "dashboardUnlimitedPrice": "Starting from $130/day",
+  "dashboardAffiliates": "Affiliates",
+  "dashboardAffiliatesDesc": "Earn on referrals, lifetime commissions",
+  "dashboardAffiliatesPrice": "Up to 30% Affiliate Commission",
+  "dashboardReselling": "Reselling",
+  "dashboardResellingDesc": "Build your proxy business with API",
+  "dashboardResellingPrice": "$175 one-time",
+  "dashboardDeletionTitle": "Account Deletion Warning",
+  "dashboardDeletionTitleStitch": "Account deletion pending",
+  "dashboardDeletionMessage": "Your account will be automatically deleted in {{hours}} hours if you do not deposit any amount of money.",
+  "dashboardDeletionDepositBtn": "Deposit now to prevent account deletion",
+  "dashboardOrdersColType": "Type",
+  "dashboardOrdersColTime": "Time",
+  "dashboardOrdersColPrice": "Price",
+  "dashboardOrdersColStatus": "Status",
+  "dashboardOrdersColComments": "Comments",
+  "checkerPlaceholder": "Proxy checker coming soon.",
+  "checker": {
+    "title": "Test Your Proxies",
+    "description": "Paste one or more proxy connection strings (one per line), then click Check.",
+    "proxyList": "Proxy list (one per line)",
+    "checkButton": "Check Proxies",
+    "checking": "Checking...",
+    "stopButton": "Stop",
+    "clearButton": "Clear",
+    "working": "Working",
+    "failed": "Failed",
+    "detected": "Detected",
+    "minLatency": "Min Latency",
+    "avgLatency": "Avg Latency",
+    "maxLatency": "Max Latency",
+    "results": "Results",
+    "filterAll": "All",
+    "filterWorking": "Working Only",
+    "filterFailed": "Failed Only",
+    "checkFailed": "Check failed",
+    "howItWorks": "How It Works",
+    "how1": "Enter proxy username and password above, then paste host:port (one per line) or full connection strings.",
+    "how2": "Click «Check Proxies» to test availability and get IP, country, and latency.",
+    "how3": "Working — green; detected (blacklisted) — yellow; connection errors — red.",
+    "how4": "For Void proxy without sticky session only IP and latency are checked; detector check is skipped.",
+    "rateLimitNotice": "Limited to 5000 checks per day. Requires active GB balance.",
+    "rateLimitNoticeShort": "Limited to 5000 checks per day.",
+    "todayUsed": "Today's tests:",
+    "proxyUsername": "Proxy username",
+    "proxyPassword": "Proxy password",
+    "proxyListPlaceholder": "host:port (one per line)",
+    "proxyListLabel": "Proxy list (host:port, one per line)",
+    "dailyLimitReached": "Daily proxy check limit reached (5000 per day).",
+    "onlyOurDomain": "Only proxies from our domain (void-proxy.com) can be checked."
+  }
+}
+

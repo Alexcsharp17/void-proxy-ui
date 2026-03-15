@@ -1,0 +1,5 @@
+{
+  "name": "Void Proxy Dashboard",
+  "description": "A cyberpunk-themed dashboard for managing proxy services, featuring bandwidth monitoring, order tracking, and quick-start guides.",
+  "requestFramePermissions": []
+}

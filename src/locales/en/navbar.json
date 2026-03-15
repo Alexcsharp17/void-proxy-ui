@@ -1,0 +1,28 @@
+{
+  "navigation": "NAVIGATION",
+  "proxiesSection": "Proxies",
+  "account": "ACCOUNT",
+  "proxies": "Proxies",
+  "proxiesDashboard": "Dashboard",
+  "proxiesPricing": "Pricing",
+  "proxiesSetup": "Proxy Setup",
+  "proxiesChecker": "Checker",
+  "proxiesGenerator": "Proxy Generator",
+  "twitter": "Twitter",
+  "admin": "Admin",
+  "telegram": "Telegram",
+  "profile": "Profile",
+  "profileInfo": "Profile Info",
+  "balance": "Balance",
+  "orderHistory": "Order History",
+  "partners": "PARTNERS",
+  "affiliateProgram": "Affiliate Program",
+  "reseller": "Reseller",
+  "login": "Login",
+  "register": "Register",
+  "logout": "Logout",
+  "loading": "Loading...",
+  "balanceZero": "$0.00"
+}
+
+

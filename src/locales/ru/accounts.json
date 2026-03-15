@@ -1,0 +1,24 @@
+{
+  "fileUpload": {
+    "dragOrClick": "Перетащите файл сюда или нажмите для выбора",
+    "supportedFormats": "Поддерживаемые форматы:",
+    "sessionFormat": "Session: sessionString:telegramId",
+    "authKeyFormat": "Auth Key: auth_key_hex:dc_id",
+    "fileSelected": "Файл выбран:",
+    "size": "Размер:",
+    "detectedFormat": "Определённый формат:",
+    "session": "Session",
+    "authKey": "Auth Key",
+    "preview": "Preview (первые 5 строк):",
+    "moreLines": "... и ещё {count} строк",
+    "validationError": "Ошибка валидации:",
+    "formatDetectionError": "Не удалось определить формат файла. Поддерживаются: Session (sessionString:telegramId или строка с разделителем « | »), Auth Key (auth_key_hex:dc_id или строка с « | »).",
+    "invalidFormat": "Неверный формат файла",
+    "selectFile": "Выбрать файл",
+    "cancel": "Отмена",
+    "uploadAccounts": "Загрузить аккаунты",
+    "uploading": "Загрузка...",
+    "emptyFile": "Файл пустой",
+    "formatMismatch": "Файл не соответствует формату \"{format}\". Ожидается: {expectedFormat}. Примеры невалидных строк: {examples}"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "fileUpload": {
+    "dragOrClick": "Drag file here or click to select",
+    "supportedFormats": "Supported formats:",
+    "sessionFormat": "Session: sessionString:telegramId",
+    "authKeyFormat": "Auth Key: auth_key_hex:dc_id",
+    "fileSelected": "File selected:",
+    "size": "Size:",
+    "detectedFormat": "Detected format:",
+    "session": "Session",
+    "authKey": "Auth Key",
+    "preview": "Preview (first 5 lines):",
+    "moreLines": "... and {count} more lines",
+    "validationError": "Validation error:",
+    "formatDetectionError": "Failed to detect file format. Supported: Session (sessionString:telegramId or line with delimiter \" | \"), Auth Key (auth_key_hex:dc_id or line with \" | \").",
+    "invalidFormat": "Invalid file format",
+    "selectFile": "Select File",
+    "cancel": "Cancel",
+    "uploadAccounts": "Upload Accounts",
+    "uploading": "Uploading...",
+    "emptyFile": "File is empty",
+    "formatMismatch": "File does not match format \"{format}\". Expected: {expectedFormat}. Invalid line examples: {examples}"
+  }
+}

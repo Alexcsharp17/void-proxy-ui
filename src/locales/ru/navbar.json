@@ -1,0 +1,28 @@
+{
+  "navigation": "НАВИГАЦИЯ",
+  "proxiesSection": "Прокси",
+  "account": "АККАУНТ",
+  "proxies": "Прокси",
+  "proxiesDashboard": "Дашборд",
+  "proxiesPricing": "Цены",
+  "proxiesSetup": "Настройка прокси",
+  "proxiesChecker": "Чекер",
+  "proxiesGenerator": "Генератор прокси",
+  "twitter": "Twitter",
+  "admin": "Админ",
+  "telegram": "Телеграм",
+  "profile": "Профиль",
+  "profileInfo": "Профиль",
+  "balance": "Баланс",
+  "orderHistory": "История заказов",
+  "partners": "ПАРТНЁРЫ",
+  "affiliateProgram": "Партнёрская программа",
+  "reseller": "Реселлер",
+  "login": "Войти",
+  "register": "Регистрация",
+  "logout": "Выйти",
+  "loading": "Загрузка...",
+  "balanceZero": "$0.00"
+}
+
+

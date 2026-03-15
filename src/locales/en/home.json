@@ -1,0 +1,91 @@
+{
+  "hero": {
+    "title": "Void SMM",
+    "subtitle": "Boost your social media presence with premium automation tools and services.",
+    "services": "Services",
+    "faq": "FAQ",
+    "proxies": "Proxies"
+  },
+  "services": {
+    "title": "Our Services",
+    "subtitle": "Professional tools to enhance your social media presence",
+    "premiumProxies": {
+      "title": "Premium Proxies",
+      "description": "High-quality residential and mobile proxies from Vietnam and USA. Perfect for automation, scraping, and social media management.",
+      "viewProxies": "View Proxies"
+    },
+    "twitterServices": {
+      "title": "Twitter Services",
+      "description": "Boost your Twitter presence with real engagement. Get followers, likes, retweets, and more from authentic accounts.",
+      "viewServices": "View Twitter Services"
+    },
+    "telegramComments": {
+      "title": "Telegram Comments",
+      "description": "Automated comment management for Telegram channels. Boost engagement and grow your community.",
+      "comingSoon": "Coming Soon"
+    }
+  },
+  "advantages": {
+    "title": "Why Choose Void SMM?",
+    "subtitle": "Experience the difference with our premium services",
+    "secure": {
+      "title": "Secure & Reliable",
+      "description": "Bank-level security with 99.9% uptime guarantee. Your data and operations are always protected."
+    },
+    "fast": {
+      "title": "Lightning Fast",
+      "description": "Instant activation and high-speed connections. Get your proxies running in seconds, not minutes."
+    },
+    "support": {
+      "title": "24/7 Support",
+      "description": "Round-the-clock assistance from our expert team. We're here whenever you need help."
+    },
+    "quality": {
+      "title": "Quality Guaranteed",
+      "description": "Premium IPs with no blacklists. Clean, fresh proxies for all your needs."
+    }
+  },
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "subtitle": "Everything you need to know about our services",
+    "items": {
+      "whatIsVoid": {
+        "question": "What is Void SMM?",
+        "answer": "Void SMM is a comprehensive social media marketing platform that provides premium proxy services, automation tools, and growth solutions for businesses and individuals looking to enhance their online presence across various social media platforms."
+      },
+      "proxyTypes": {
+        "question": "What types of proxies do you offer?",
+        "answer": "We offer premium residential and mobile proxies from Vietnam and USA. All our IPs are clean, fresh, and never blacklisted. Perfect for automation, scraping, and social media management."
+      },
+      "activation": {
+        "question": "How fast is the activation?",
+        "answer": "Your proxies are activated instantly upon purchase. No waiting times, no delays. Get started with your automation projects immediately."
+      },
+      "payment": {
+        "question": "What payment methods do you accept?",
+        "answer": "We accept all major cryptocurrencies including Bitcoin, Ethereum, and USDT. All payments are processed securely and instantly."
+      },
+      "security": {
+        "question": "Is my data secure?",
+        "answer": "Absolutely. We use enterprise-grade security to protect your data. Your privacy is our top priority, and we never share your information with third parties."
+      },
+      "refunds": {
+        "question": "Do you offer refunds?",
+        "answer": "Yes, we offer a 7-day money-back guarantee. If you're not satisfied with our service, we'll refund your payment in full."
+      },
+      "support": {
+        "question": "How can I contact support?",
+        "answer": "You can reach our support team 24/7 through live chat, email, or Telegram. We're always here to help you succeed."
+      },
+      "referral": {
+        "question": "What is the referral program?",
+        "answer": "Our referral program allows you to earn commissions by referring new users to our platform. You'll receive a percentage of their spending as a reward for successful referrals."
+      },
+      "api": {
+        "question": "Do you have an API?",
+        "answer": "Yes, we provide a comprehensive API for developers and businesses who want to integrate our services into their own applications. Contact our support team for API documentation."
+      }
+    }
+  }
+}
+
