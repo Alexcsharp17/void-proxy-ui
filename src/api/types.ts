@@ -130,3 +130,82 @@ export interface ProxyCheckBatchResponse {
   };
   message?: string;
 }
+
+/** Tier/package from API (product.tiers or product.packages) */
+export interface ProductTier {
+  price?: number;
+  displayName?: string;
+  quantity?: number;
+  minQuantity?: number;
+  maxQuantity?: number;
+  [key: string]: unknown;
+}
+
+/** Single entry from GET /products/:id/pricing-table */
+export interface PricingTableEntry {
+  productId: number;
+  productName: string;
+  packageDisplayName: string;
+  quantity: number;
+  quantityDisplay: string;
+  speedMbps?: number;
+  modifierTier?: number;
+  modifier?: { level: number; speed?: number; days?: number; multiplier: number; label: string; type: string; metadata?: unknown };
+  basePrice: number;
+  totalPrice: number;
+}
+
+/** Response from GET /products/:id/pricing-table */
+export interface PricingTableResponse {
+  serviceType: string;
+  products: Array<{
+    productId: number;
+    productName: string;
+    pricingTable: PricingTableEntry[];
+  }>;
+}
+
+/** Modifier level from getPricingModifiers */
+export interface PricingModifierLevel {
+  value: number;
+  label: string;
+  metadata?: { speed?: number; days?: number; multiplier?: number; [key: string]: unknown };
+}
+
+/** Response from GET /products/pricing-modifiers?productId= */
+export interface PricingModifiersResponse {
+  [key: string]: {
+    type: string;
+    levels: PricingModifierLevel[];
+  };
+}
+
+/** UI attribute from productDetails.ui (label/value can be localized) */
+export interface ProductUiAttribute {
+  key: string;
+  label: string | { en?: string; ru?: string };
+  value: string | { en?: string; ru?: string };
+  emoji?: string;
+  priority?: number;
+}
+
+/** Product from GET /products/proxies (public) */
+export interface Product {
+  id: number | string;
+  name: string | { en?: string; ru?: string };
+  displayName?: string;
+  description?: string | { en?: string; ru?: string };
+  fullDescription?: string;
+  serviceType: number | string;
+  isActive: boolean;
+  basePrice?: number;
+  displayUnit?: string;
+  baseUnit?: string;
+  productDetails?: {
+    ui?: ProductUiAttribute[];
+    [key: string]: unknown;
+  };
+  /** Pricing tiers (from API dto.tiers) */
+  tiers?: ProductTier[];
+  [key: string]: unknown;
+}

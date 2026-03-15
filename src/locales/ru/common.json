@@ -32,6 +32,13 @@
   "noData": "Нет данных",
   "items": "элементов",
   "showing": "Показано",
-  "of": "из"
+  "of": "из",
+  "pageNotFound": "Страница не найдена",
+  "pageNotFoundDesc": "Запрашиваемая страница не существует.",
+  "backToHome": "На главную",
+  "serviceUnavailable": "Сервис временно недоступен",
+  "serviceUnavailableDesc": "Проверьте подключение и попробуйте снова.",
+  "retry": "Повторить",
+  "apiUrlNotConfigured": "API URL не настроен. Задайте VITE_API_BASE_URL в .env или в секретах деплоя."
 }
 

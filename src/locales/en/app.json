@@ -29,6 +29,8 @@
     "proxyChecker": "Proxy Checker",
     "proxyGenerator": "Proxy Generator",
     "deposit": "Deposit",
+    "plans": "Plans & Pricing",
+    "addons": "Add-ons",
     "support": "Support",
     "settings": "Settings",
     "subtitleOverview": "Welcome back. Here's your account overview.",
@@ -37,6 +39,8 @@
     "subtitleProxyChecker": "Check your proxies for availability and speed.",
     "subtitleProxyGenerator": "Generate a list of proxies with custom configuration.",
     "subtitleDeposit": "Fund your account with cryptocurrency.",
+    "subtitlePlans": "View plans and pricing for proxy and add-on options.",
+    "subtitleAddons": "Extra options and upgrades for your account.",
     "subtitleSupport": "Get help, contact us, or browse the FAQ.",
     "subtitleSettings": "Manage your account preferences and security.",
     "balance": "Balance",
@@ -304,10 +308,6 @@
         "question": "What payment methods do you accept?",
         "answer": "We accept major cryptocurrencies (Bitcoin, Ethereum, USDT and others). Payments are processed securely; balance is credited after confirmations. No KYC required for standard use."
       },
-      "refunds": {
-        "question": "What is your refund policy?",
-        "answer": "If there's a technical issue on our side that we can't fix, we refund the unused balance. For general dissatisfaction we may offer a partial refund or credit. Contact support with your order or account details."
-      },
       "contactSupport": {
         "question": "How can I contact support?",
         "answer": "Reach us 24/7 via Telegram: use the chat or write to us in direct messages. We reply as soon as possible and can help with setup, billing, and technical issues."
@@ -317,6 +317,100 @@
         "answer": "Yes. We provide an API for developers and businesses to integrate proxy ordering and management. Check the API docs in the dashboard or contact support for access and documentation."
       }
     }
+  },
+  "addons": {
+    "title": "Add-ons",
+    "subtitle": "Extend your account with optional upgrades and features.",
+    "resellerTitle": "Reseller",
+    "resellerDesc": "Sell proxies to your clients with your own branding. API, webhooks, and tiered discounts.",
+    "premiumTitle": "Premium options",
+    "premiumDesc": "Additional features and higher limits. Contact support for custom plans."
+  },
+  "plans": {
+    "title": "Plans & Pricing",
+    "subtitle": "Choose a plan that fits your needs. Pay as you go or subscribe.",
+    "choosePlan": "Choose your plan",
+    "proxyPlans": "Proxy plans",
+    "proxyPlansDesc": "Purchase proxy bandwidth (GB or unlimited) to use the Proxy Generator and access our proxy network.",
+    "goToDeposit": "Go to Deposit",
+    "order": "Order",
+    "availablePackages": "Available packages",
+    "packageHeader": "Package",
+    "trafficHeader": "Traffic",
+    "priceHeader": "Price",
+    "pricePerGb": "Price / GB",
+    "durationHeader": "Duration",
+    "resellerBadge": "Reseller price applied via API",
+    "selectBandwidth": "Select Bandwidth",
+    "needCustomPlan": "Need a custom plan for your business? Contact our support team for special conditions.",
+    "documentation": "Documentation",
+    "supportChat": "Support Chat",
+    "featuresGb": {
+      "cleanIp": "Clean IPs",
+      "payPerTraffic": "Pay per traffic",
+      "rotation": "Rotation",
+      "scraping": "Scraping & data"
+    },
+    "featuresUnlimited": {
+      "cleanIp": "Clean IPs",
+      "fixedSpeed": "Fixed speed",
+      "smm": "SMM & multi-accounting",
+      "tasks24": "24/7 tasks"
+    }
+  },
+  "buyOption": {
+    "resellerMessage": "Reseller is an add-on. Purchase this option to access the reseller dashboard.",
+    "goToAddons": "Go to Add-ons",
+    "noActiveOrders": "No active proxy orders. Purchase a plan to generate proxies.",
+    "goToPlansPricing": "Plans & Pricing"
+  },
+  "landing": {
+    "viewPlans": "View plans & pricing"
+  },
+  "proxiesPage": {
+    "heroTitle": "VOID PROXY",
+    "heroSubtitle": "Premium proxies with 100+ countries, unlimited bandwidth, and full customization. Perfect for automation, scraping & multi-account workflows.",
+    "badges": {
+      "datacenter": "DATACENTER",
+      "residential": "RESIDENTIAL",
+      "unlimited": "UNLIMITED"
+    },
+    "features": {
+      "wideCountrySelection": { "title": "One product — all tasks", "description": "Suitable for automation, accounts, scraping and analytics." },
+      "fullCustomization": { "title": "Full Customization", "description": "Customize connection strings with region, city, session, and TTL parameters. Full control over proxy behavior." },
+      "highSpeedAutomation": { "title": "Best prices on the market", "description": "Optimized for high volume. The more traffic — the lower the price." }
+    },
+    "stats": {
+      "uptime": "Uptime last 90 days",
+      "countries": "Available countries",
+      "speedFrom": "from {{speed}} Mbps",
+      "throughput": "Typical throughput per line"
+    },
+    "selectPackage": "Choose Your Plan",
+    "order": "Order",
+    "signInToOrder": "Sign in to order",
+    "loading": "Loading proxies…",
+    "noProxies": "No Active Proxy Products",
+    "noProxiesDescription": "No active proxy products are currently available. Please check back later.",
+    "useCasesTitle": "What Can You Use Our Proxies For?",
+    "useCases": {
+      "accountCreation": { "title": "Account Creation", "description": "Create and verify accounts on major apps and sites — rotating 4G IPs reduce flags and keep sessions stable." },
+      "automationBots": { "title": "Automation & Bots", "description": "Run social media bots, scraping tools, sneaker bots, crypto trading bots, SEO monitoring, and RPA workflows with stable, rotating IPs." },
+      "marketingGrowth": { "title": "Marketing & Growth", "description": "Manage multiple ad accounts, post scheduling, influencer outreach, lead generation, and multi-region campaigns without triggering bans." },
+      "bypassGeo": { "title": "Bypass Geo-Restrictions", "description": "Access region-locked services, streaming platforms, and websites as if you were browsing locally from the target country." },
+      "ecommerce": { "title": "E-commerce Tools", "description": "Monitor competitor prices, check stock availability, test regional promotions, and manage multiple store accounts." },
+      "dataCollection": { "title": "Data Collection", "description": "Perform large-scale scraping, research, and analytics without IP blacklisting — ideal for academics, businesses, and agencies." }
+    },
+    "faqTitle": "Frequently Asked Questions",
+    "faq": {
+      "whatToChoose": { "question": "Not sure what to choose?", "answer": "Choose GB Proxies if you have many requests and price per volume matters. Choose Unlimited if you need long sessions, high speed, and 24/7 operation." },
+      "threads": { "question": "How many threads can I run?", "answer": "Typically 50–150, depending on your workload and tools." },
+      "customize": { "question": "Can I customize connection settings?", "answer": "Yes — you can customize region, city, session, and TTL parameters directly in the connection string." },
+      "protocols": { "question": "What protocols do you support?", "answer": "We support HTTP, HTTPS, SOCKS5, HTTP/3, and UDP-based traffic where applicable." },
+      "countries": { "question": "What countries are available?", "answer": "We support 100+ countries including US, UK, Germany, France, Italy, Spain, Netherlands, and many more." }
+    },
+    "login": "Log in",
+    "signUp": "Sign up"
   },
   "common": {
     "loading": "Loading…",

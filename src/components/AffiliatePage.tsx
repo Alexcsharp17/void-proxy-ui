@@ -73,7 +73,7 @@ const AffiliatePage = () => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
         <div className="bg-bg-panel/80 border border-border-main rounded-xl p-4 h-full">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+            <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
               <Users className="w-5 h-5" />
             </div>
             <div className="min-w-0 flex-1">
@@ -86,7 +86,7 @@ const AffiliatePage = () => {
         </div>
         <div className="bg-bg-panel/80 border border-border-main rounded-xl p-4 h-full">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+            <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
               <DollarSign className="w-5 h-5" />
             </div>
             <div className="min-w-0 flex-1">
@@ -99,7 +99,7 @@ const AffiliatePage = () => {
         </div>
         <div className="bg-bg-panel/80 border border-border-main rounded-xl p-4 h-full">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+            <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
               <BarChart3 className="w-5 h-5" />
             </div>
             <div className="min-w-0 flex-1">
@@ -123,7 +123,7 @@ const AffiliatePage = () => {
             <button
               type="button"
               onClick={copyReferralLink}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10 transition-colors text-sm font-medium shrink-0"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-blue-500/50 text-blue-400 hover:bg-blue-500/10 transition-colors text-sm font-medium shrink-0"
             >
               {copied ? (
                 <>

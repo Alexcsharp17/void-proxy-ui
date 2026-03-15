@@ -83,11 +83,6 @@ const SettingsPage = ({ theme, setTheme }: { theme: 'light' | 'dark', setTheme: 
   return (
     <div className="space-y-8">
       <div className="space-y-8">
-        <div className="space-y-2">
-          <h3 className="text-sm font-bold uppercase tracking-widest text-text-primary">{t('settings.accountSettings')}</h3>
-          <p className="text-xs text-text-secondary leading-relaxed">{t('settings.accountSettingsDesc')}</p>
-        </div>
-
         <div className="space-y-6">
           {/* Preferences */}
           <div className="glass-panel p-6 lg:p-8 rounded-2xl space-y-6">

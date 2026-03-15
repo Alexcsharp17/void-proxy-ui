@@ -23,10 +23,13 @@ export function setOnUnauthorized(callback: (() => void) | null): void {
   onUnauthorized = callback;
 }
 
+const REQUEST_TIMEOUT_MS = 15000;
+
 function createClient() {
   const client = axios.create({
     baseURL: BASE_URL,
     headers: { 'Content-Type': 'application/json' },
+    timeout: REQUEST_TIMEOUT_MS,
   });
 
   client.interceptors.request.use((config) => {

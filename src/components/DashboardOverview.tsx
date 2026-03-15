@@ -111,13 +111,13 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                 stroke="currentColor" 
                 strokeWidth="8" 
                 strokeDasharray="282.7" 
-                strokeDashoffset={282.7 - (282.7 * (dashboardData?.usage?.percentage || 75)) / 100} 
+                strokeDashoffset={282.7 - (282.7 * (dashboardData?.usage?.percentage ?? 0)) / 100} 
                 strokeLinecap="round"
                 className="text-accent-primary transition-all duration-1000"
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-              <span className="font-bold text-2xl">{typeof dashboardData?.usage?.percentage === 'number' ? Number(dashboardData.usage.percentage.toFixed(2)) : 75}%</span>
+              <span className="font-bold text-2xl">{typeof dashboardData?.usage?.percentage === 'number' ? Number(dashboardData.usage.percentage.toFixed(2)) : 0}%</span>
               <span className="text-[8px] uppercase tracking-widest text-text-secondary font-bold">{t('dashboard.used')}</span>
             </div>
             <div className="absolute top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-accent-primary rounded-full shadow-[0_0_10px_var(--accent-primary)]"></div>
@@ -125,9 +125,9 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 
           <div className="flex-1 w-full space-y-3">
             {[
-              { labelKey: 'dashboard.total', value: dashboardData?.usage?.total || '100', unit: 'GB', color: 'text-accent-primary' },
-              { labelKey: 'dashboard.used', value: dashboardData?.usage?.used || '75.2', unit: 'GB', color: 'text-orange-400' },
-              { labelKey: 'dashboard.left', value: dashboardData?.usage?.left || '24.8', unit: 'GB', color: 'text-accent-primary' }
+              { labelKey: 'dashboard.total', value: dashboardData?.usage?.total ?? '0', unit: 'GB', color: 'text-accent-primary' },
+              { labelKey: 'dashboard.used', value: dashboardData?.usage?.used ?? '0', unit: 'GB', color: 'text-orange-400' },
+              { labelKey: 'dashboard.left', value: dashboardData?.usage?.left ?? '0', unit: 'GB', color: 'text-accent-primary' }
             ].map((stat) => (
               <div key={stat.labelKey} className="flex items-center justify-between p-3 rounded-xl bg-bg-input/50">
                 <span className="text-[10px] font-bold text-text-secondary uppercase tracking-wider">{t(stat.labelKey)}</span>

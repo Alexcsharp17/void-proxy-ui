@@ -61,7 +61,8 @@ export default function VerifyEmailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-bg-main text-text-primary p-4">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-bg-main text-text-primary p-4 gap-4">
+        <img src="/void.svg" alt="Void" className="h-10 w-auto" />
         <div className="animate-pulse text-text-secondary">{t('verifyEmail.verify')}…</div>
       </div>
     );
@@ -70,6 +71,7 @@ export default function VerifyEmailPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-bg-main text-text-primary p-4">
       <div className="w-full max-w-sm space-y-6 text-center">
+        <img src="/void.svg" alt="Void" className="h-10 w-auto mx-auto mb-4" />
         {success ? (
           <>
             <div className="rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-sm px-4 py-2">

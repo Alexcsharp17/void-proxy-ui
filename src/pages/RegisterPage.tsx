@@ -155,6 +155,7 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-bg-main text-text-primary p-4">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
+          <img src="/void.svg" alt="Void" className="h-10 w-auto mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-text-primary">{t('register.title')}</h1>
           <p className="text-text-secondary text-sm mt-1">{t('register.subtitle')}</p>
         </div>

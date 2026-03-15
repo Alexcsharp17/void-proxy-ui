@@ -67,7 +67,7 @@ export default function ResetPasswordPage() {
   if (!token && !error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-bg-main text-text-primary p-4">
-        <div className="animate-pulse text-text-secondary">{t('common:loading')}</div>
+        <div className="animate-pulse text-text-secondary">{t('common.loading', { ns: 'app' })}</div>
       </div>
     );
   }
@@ -95,6 +95,7 @@ export default function ResetPasswordPage() {
     <div className="min-h-screen flex items-center justify-center bg-bg-main text-text-primary p-4">
       <div className="w-full max-w-sm space-y-6">
         <div className="text-center">
+          <img src="/void.svg" alt="Void" className="h-10 w-auto mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-text-primary">{t('resetPassword.title')}</h1>
           <p className="text-text-secondary text-sm mt-1">{t('resetPassword.subtitle')}</p>
         </div>

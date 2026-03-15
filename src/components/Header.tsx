@@ -43,6 +43,8 @@ const Header: React.FC<HeaderProps> = ({ activePage, onMenuClick, onSettingsClic
       case 'proxy-checker': return t('header.proxyChecker');
       case 'proxy-generator': return t('header.proxyGenerator');
       case 'deposit': return t('header.deposit');
+      case 'plans': return t('header.plans');
+      case 'addons': return t('header.addons');
       case 'support': return t('header.support');
       case 'settings': return t('header.settings');
       default: return t('header.settings');
@@ -57,6 +59,8 @@ const Header: React.FC<HeaderProps> = ({ activePage, onMenuClick, onSettingsClic
       case 'proxy-checker': return t('header.subtitleProxyChecker');
       case 'proxy-generator': return t('header.subtitleProxyGenerator');
       case 'deposit': return t('header.subtitleDeposit');
+      case 'plans': return t('header.subtitlePlans');
+      case 'addons': return t('header.subtitleAddons');
       case 'support': return t('header.subtitleSupport');
       case 'settings': return t('header.subtitleSettings');
       default: return t('header.subtitleSettings');

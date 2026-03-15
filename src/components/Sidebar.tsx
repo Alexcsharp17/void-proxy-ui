@@ -2,7 +2,7 @@ import React from 'react';
 import { useDispatch } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { 
-  LayoutDashboard, CreditCard, Users, Store, 
+  LayoutDashboard, CreditCard, Users, Store, PlusCircle,
   CheckCircle2, Lock, Settings, LogOut, Search, Command, HelpCircle 
 } from 'lucide-react';
 import { setSearchOpen } from '../store/slices/searchSlice';
@@ -33,12 +33,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onPageChange, onClose }) 
 
   return (
     <div className="flex flex-col h-full overflow-y-auto no-scrollbar">
-      <div className="p-8 flex items-center gap-3">
+      <div className="p-8">
         <img src="/void.svg" alt="Void" className="h-8 w-auto shrink-0" />
-        <div>
-          <h1 className="font-bold text-lg leading-tight tracking-tight text-text-primary">VOID</h1>
-          <p className="text-[10px] text-text-secondary uppercase tracking-widest">{t('sidebar.tagline')}</p>
-        </div>
       </div>
 
       <div className="px-4 pb-4">
@@ -63,7 +59,18 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onPageChange, onClose }) 
           active={activePage === 'overview'} 
           onClick={() => handlePageClick('overview')}
         />
-        <SidebarItem icon={CreditCard} label={t('sidebar.plansPricing')} />
+        <SidebarItem 
+          icon={CreditCard} 
+          label={t('sidebar.plansPricing')} 
+          active={activePage === 'plans'}
+          onClick={() => handlePageClick('plans')}
+        />
+        <SidebarItem 
+          icon={PlusCircle} 
+          label={t('sidebar.addOns')} 
+          active={activePage === 'addons'}
+          onClick={() => handlePageClick('addons')}
+        />
         
         <div className="text-[10px] font-bold text-text-secondary uppercase tracking-[0.2em] mb-4 mt-8 px-4">{t('sidebar.financials')}</div>
         <SidebarItem 

@@ -19,6 +19,7 @@
   
   --color-accent-primary: var(--accent-primary);
   --color-accent-secondary: var(--accent-secondary);
+  --color-accent-violet: var(--accent-violet);
 }
 
 @layer base {
@@ -34,6 +35,7 @@
     --border-hover: rgba(100, 138, 255, 0.3);
     --accent-primary: #648aff;
     --accent-secondary: #00ff9d;
+    --accent-violet: #ddb7ff;
   }
 
   :root.light {
@@ -48,6 +50,7 @@
     --border-hover: rgba(79, 124, 255, 0.3);
     --accent-primary: #4f7cff;
     --accent-secondary: #00d680;
+    --accent-violet: #b794f6;
   }
 
   body {
@@ -98,6 +101,14 @@
   .glass-panel {
     background-color: var(--bg-panel);
     @apply backdrop-blur-xl border border-border-main;
+  }
+
+  .glass-card {
+    background: rgba(18, 18, 24, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(67, 70, 84, 0.15);
+    box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.2);
   }
 
   /* Auth forms: force dark input background (hover + autofill) */

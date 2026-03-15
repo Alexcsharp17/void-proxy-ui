@@ -14,7 +14,6 @@ const FAQ_KEYS = [
   'stickySessions',
   'howToStart',
   'paymentMethods',
-  'refunds',
   'contactSupport',
   'api',
 ] as const;

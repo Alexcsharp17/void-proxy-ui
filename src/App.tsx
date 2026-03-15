@@ -24,6 +24,8 @@ import ProxyGenerator from './components/ProxyGenerator';
 import DepositPage from './components/DepositPage';
 import SettingsPage from './components/SettingsPage';
 import SupportPage from './components/SupportPage';
+import AddonsPage from './components/AddonsPage';
+import PlansPage from './components/PlansPage';
 import CommandPalette from './components/CommandPalette';
 import type { Order } from './types';
 
@@ -47,14 +49,6 @@ export default function App() {
       })),
     [ordersNoIcon]
   );
-
-  useEffect(() => {
-    if (theme === 'light') {
-      document.documentElement.classList.add('light');
-    } else {
-      document.documentElement.classList.remove('light');
-    }
-  }, [theme]);
 
   useEffect(() => {
     const lng = i18n.language?.split('-')[0];
@@ -155,6 +149,10 @@ export default function App() {
             <DepositPage />
           ) : activePage === 'support' ? (
             <SupportPage />
+          ) : activePage === 'addons' ? (
+            <AddonsPage />
+          ) : activePage === 'plans' ? (
+            <PlansPage onNavigateToDeposit={() => dispatch(setActivePage('deposit'))} />
           ) : (
             <SettingsPage theme={theme} setTheme={(t) => dispatch(setTheme(t))} />
           )}

@@ -42,7 +42,7 @@ const CommandPalette: React.FC = () => {
 
   const items: SearchItem[] = useMemo(() => [
     { id: 'overview', labelKey: 'commandPalette.overview', categoryKey: 'commandPalette.mainMenu', icon: LayoutDashboard, page: 'overview' },
-    { id: 'plans', labelKey: 'commandPalette.plansPricing', categoryKey: 'commandPalette.mainMenu', icon: CreditCard },
+    { id: 'plans', labelKey: 'commandPalette.plansPricing', categoryKey: 'commandPalette.mainMenu', icon: CreditCard, page: 'plans' },
     { id: 'deposit', labelKey: 'commandPalette.deposit', categoryKey: 'commandPalette.financials', icon: CreditCard, page: 'deposit' },
     { id: 'affiliate', labelKey: 'commandPalette.affiliateProgram', categoryKey: 'commandPalette.financials', icon: Users, page: 'affiliate' },
     { id: 'reselling', labelKey: 'commandPalette.resellingSettings', categoryKey: 'commandPalette.financials', icon: Store, page: 'reselling' },
@@ -50,7 +50,7 @@ const CommandPalette: React.FC = () => {
     { id: 'api-docs', labelKey: 'commandPalette.apiDocs', categoryKey: 'commandPalette.developer', icon: FileText },
     { id: 'proxy-checker', labelKey: 'commandPalette.proxyChecker', categoryKey: 'commandPalette.tools', icon: CheckCircle2, page: 'proxy-checker' },
     { id: 'proxy-generator', labelKey: 'commandPalette.proxyGenerator', categoryKey: 'commandPalette.tools', icon: Lock, page: 'proxy-generator' },
-    { id: 'add-ons', labelKey: 'commandPalette.addOns', categoryKey: 'commandPalette.tools', icon: PlusCircle },
+    { id: 'add-ons', labelKey: 'commandPalette.addOns', categoryKey: 'commandPalette.tools', icon: PlusCircle, page: 'addons' },
     { id: 'whitelabel', labelKey: 'commandPalette.whitelabel', categoryKey: 'commandPalette.tools', icon: Zap },
     { id: 'support', labelKey: 'commandPalette.support', categoryKey: 'commandPalette.system', icon: HelpCircle, page: 'support' },
     { id: 'settings', labelKey: 'commandPalette.settings', categoryKey: 'commandPalette.system', icon: Settings, page: 'settings' },
