@@ -1,9 +1,10 @@
-@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-label: "Space Grotesk", sans-serif;
+  --font-headline: "Inter", ui-sans-serif, system-ui, sans-serif;
 
   --color-bg-main: var(--bg-main);
   --color-bg-sidebar: var(--bg-sidebar);
@@ -20,6 +21,8 @@
   --color-accent-primary: var(--accent-primary);
   --color-accent-secondary: var(--accent-secondary);
   --color-accent-violet: var(--accent-violet);
+  /* Section alternate: matches archive surface-container-lowest, softer than bg-panel */
+  --color-bg-section-alt: #0e0e10;
 }
 
 @layer base {
@@ -111,6 +114,18 @@
     box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.2);
   }
 
+  /* Landing: terminal scanline effect */
+  .scanline {
+    background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.1) 50%);
+    background-size: 100% 4px;
+    pointer-events: none;
+  }
+
+  /* Landing: glow on accent text */
+  .text-glow {
+    text-shadow: 0 0 20px rgba(100, 138, 255, 0.35);
+  }
+
   /* Auth forms: force dark input background (hover + autofill) */
   .auth-form input,
   .auth-form textarea {
@@ -130,5 +145,65 @@
     -webkit-box-shadow: 0 0 0 1000px var(--bg-input) inset !important;
     box-shadow: 0 0 0 1000px var(--bg-input) inset !important;
     background-color: var(--bg-input) !important;
+  }
+
+  /* Purchase page range slider: track fill (accent up to value) */
+  .purchase-slider-wrap {
+    position: relative;
+    width: 100%;
+    height: 8px;
+    display: flex;
+    align-items: center;
+  }
+  .purchase-slider-fill {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 6px;
+    border-radius: 9999px;
+    background: var(--accent-primary);
+    pointer-events: none;
+    transition: width 0.15s ease;
+  }
+  .purchase-slider-wrap input[type="range"] {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 8px;
+    margin: 0;
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+  }
+  .purchase-slider-wrap input[type="range"]::-webkit-slider-runnable-track {
+    height: 6px;
+    border-radius: 9999px;
+    background: var(--bg-panel);
+  }
+  .purchase-slider-wrap input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent-primary);
+    border: 2px solid var(--bg-main);
+    cursor: pointer;
+    margin-top: -6px;
+    box-shadow: 0 0 10px rgba(100, 138, 255, 0.4);
+  }
+  .purchase-slider-wrap input[type="range"]::-moz-range-track {
+    height: 6px;
+    border-radius: 9999px;
+    background: var(--bg-panel);
+  }
+  .purchase-slider-wrap input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent-primary);
+    border: 2px solid var(--bg-main);
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(100, 138, 255, 0.4);
   }
 }

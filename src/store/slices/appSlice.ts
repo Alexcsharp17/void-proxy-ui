@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-export type Page = 'overview' | 'reselling' | 'affiliate' | 'settings' | 'proxy-checker' | 'proxy-generator' | 'deposit' | 'support' | 'addons' | 'plans';
+export type Page = 'overview' | 'reselling' | 'affiliate' | 'settings' | 'proxy-checker' | 'proxy-generator' | 'deposit' | 'support' | 'addons' | 'plans' | 'purchase';
 
 export type Locale = 'en' | 'ru';
 
@@ -21,12 +21,19 @@ function getInitialTheme(): 'light' | 'dark' {
   return getStoredTheme() ?? getSystemTheme();
 }
 
+export type PurchaseSegment = 'gb' | 'unlimited';
+
 interface AppState {
   activePage: Page;
   theme: 'light' | 'dark';
   locale: Locale;
   isMobileMenuOpen: boolean;
   isDesktop: boolean;
+  purchaseSegment: PurchaseSegment;
+  /** When set, Proxy Generator opens with this order's sub-credentials (e.g. from Recent Orders click). */
+  proxyGeneratorOrderId: number | null;
+  /** When set, Proxy Checker opens with this list pre-filled (e.g. from Proxy Generator "Check in Proxy Checker"). */
+  proxyCheckerInitialProxies: string | null;
 }
 
 const initialState: AppState = {
@@ -35,6 +42,9 @@ const initialState: AppState = {
   locale: 'en',
   isMobileMenuOpen: false,
   isDesktop: true,
+  purchaseSegment: 'gb',
+  proxyGeneratorOrderId: null,
+  proxyCheckerInitialProxies: null,
 };
 
 const appSlice = createSlice({
@@ -63,8 +73,17 @@ const appSlice = createSlice({
     setIsDesktop: (state, action: PayloadAction<boolean>) => {
       state.isDesktop = action.payload;
     },
+    setPurchaseSegment: (state, action: PayloadAction<PurchaseSegment>) => {
+      state.purchaseSegment = action.payload;
+    },
+    setProxyGeneratorOrderId: (state, action: PayloadAction<number | null>) => {
+      state.proxyGeneratorOrderId = action.payload;
+    },
+    setProxyCheckerInitialProxies: (state, action: PayloadAction<string | null>) => {
+      state.proxyCheckerInitialProxies = action.payload;
+    },
   },
 });
 
-export const { setActivePage, setTheme, setSystemTheme, setLocale, setMobileMenuOpen, setIsDesktop } = appSlice.actions;
+export const { setActivePage, setTheme, setSystemTheme, setLocale, setMobileMenuOpen, setIsDesktop, setPurchaseSegment, setProxyGeneratorOrderId, setProxyCheckerInitialProxies } = appSlice.actions;
 export default appSlice.reducer;

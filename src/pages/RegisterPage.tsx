@@ -297,6 +297,15 @@ export default function RegisterPage() {
             {t('register.signIn')}
           </Link>
         </p>
+
+        <div className="text-center pt-2">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-1.5 text-sm text-text-secondary hover:text-accent-primary transition-colors"
+          >
+            ← Back to homepage
+          </Link>
+        </div>
       </div>
 
       <SuccessRegistrationModal

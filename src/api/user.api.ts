@@ -4,9 +4,12 @@ import type { User, BalanceResponse } from './types';
 export interface ReferralStats {
   totalReferrals: number;
   totalEarnings: number;
+  totalReferralVolume: number;
   commissionRate: number;
   referralCode: string;
   referralLevel: string;
+  userRank: string;
+  currentTierLabel: string;
 }
 
 export const userApi = {
@@ -27,7 +30,7 @@ export const userApi = {
 
   getReferralStats: async (): Promise<ReferralStats> => {
     const res = await api.get<ReferralStats>('/referral/stats');
-    return res.data ?? { totalReferrals: 0, totalEarnings: 0, commissionRate: 0, referralCode: '', referralLevel: '' };
+    return res.data ?? { totalReferrals: 0, totalEarnings: 0, totalReferralVolume: 0, commissionRate: 0, referralCode: '', referralLevel: '', userRank: 'USER', currentTierLabel: '' };
   },
 
   getReferrals: async (): Promise<unknown[]> => {

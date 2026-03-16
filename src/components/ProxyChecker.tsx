@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CheckCircle2, RefreshCw, Play, Eraser, CheckCircle, XCircle, Activity, Info } from 'lucide-react';
+import { CheckCircle2, RefreshCw, Play, Eraser, CheckCircle, XCircle, Activity, Info, ChevronLeft } from 'lucide-react';
 import { proxiesApi } from '../api';
 import AutoDismissAlert from './AutoDismissAlert';
 
@@ -11,7 +11,14 @@ interface CheckResult {
   error?: string;
 }
 
-const ProxyChecker = () => {
+interface ProxyCheckerProps {
+  /** Pre-fill proxy list when opened from Proxy Generator. Consumed once. */
+  initialProxiesFromStore?: string | null;
+  onConsumeInitialProxies?: () => void;
+  onBackToOrders?: () => void;
+}
+
+const ProxyChecker: React.FC<ProxyCheckerProps> = ({ initialProxiesFromStore = null, onConsumeInitialProxies, onBackToOrders }) => {
   const { t } = useTranslation('app');
   const [proxyList, setProxyList] = useState('');
   const [proxyLogin, setProxyLogin] = useState('');
@@ -26,6 +33,14 @@ const ProxyChecker = () => {
     proxiesApi.getCheckUsage().then((u) => !cancelled && setUsage(u)).catch(() => !cancelled && setUsage(null));
     return () => { cancelled = true; };
   }, [results.length]);
+
+  useEffect(() => {
+    if (initialProxiesFromStore != null && initialProxiesFromStore.trim() !== '') {
+      setProxyList(initialProxiesFromStore.trim());
+      onConsumeInitialProxies?.();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only apply when store has value; onConsumeInitialProxies is stable in practice
+  }, [initialProxiesFromStore]);
 
   const buildConnectionStrings = (): string[] => {
     const lines = proxyList
@@ -109,6 +124,18 @@ const ProxyChecker = () => {
 
   return (
     <div className="space-y-8">
+      {typeof onBackToOrders === 'function' && (
+        <div>
+          <button
+            type="button"
+            onClick={onBackToOrders}
+            className="inline-flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-accent-primary transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            {t('proxyChecker.backToOrders')}
+          </button>
+        </div>
+      )}
       <div className="glass-panel p-6 lg:p-8 rounded-2xl space-y-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">

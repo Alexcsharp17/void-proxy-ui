@@ -9,6 +9,8 @@ import {
   setLocale,
   setMobileMenuOpen,
   setIsDesktop,
+  setProxyGeneratorOrderId,
+  setProxyCheckerInitialProxies,
 } from './store/slices/appSlice';
 import i18n from './i18n/config';
 import { useAuth } from './contexts/AuthContext';
@@ -26,13 +28,14 @@ import SettingsPage from './components/SettingsPage';
 import SupportPage from './components/SupportPage';
 import AddonsPage from './components/AddonsPage';
 import PlansPage from './components/PlansPage';
+import PurchasePage from './components/PurchasePage';
 import CommandPalette from './components/CommandPalette';
 import type { Order } from './types';
 
 export default function App() {
   const dispatch = useDispatch();
   const { user } = useAuth();
-  const { activePage, theme, isMobileMenuOpen, isDesktop } = useSelector((state: RootState) => state.app);
+  const { activePage, theme, isMobileMenuOpen, isDesktop, proxyGeneratorOrderId, proxyCheckerInitialProxies } = useSelector((state: RootState) => state.app);
   const { dashboardData, orders: ordersNoIcon, loading: dataLoading, balance, currency, showDeletionBanner, deletionCountdown } = useDashboardData();
 
   const orders: Order[] = useMemo(
@@ -136,15 +139,36 @@ export default function App() {
               showDeletionBanner={showDeletionBanner}
               deletionCountdown={deletionCountdown}
               onDepositClick={() => dispatch(setActivePage('deposit'))}
+              onOrderClick={(order) => {
+                const id = Number(order.id);
+                if (Number.isInteger(id) && id > 0) {
+                  dispatch(setProxyGeneratorOrderId(id));
+                  dispatch(setActivePage('proxy-generator'));
+                }
+              }}
             />
           ) : activePage === 'reselling' ? (
             <ResellingPage />
           ) : activePage === 'affiliate' ? (
             <AffiliatePage />
           ) : activePage === 'proxy-checker' ? (
-            <ProxyChecker />
+            <ProxyChecker
+              initialProxiesFromStore={proxyCheckerInitialProxies}
+              onConsumeInitialProxies={() => dispatch(setProxyCheckerInitialProxies(null))}
+              onBackToOrders={() => dispatch(setActivePage('overview'))}
+            />
           ) : activePage === 'proxy-generator' ? (
-            <ProxyGenerator />
+            <ProxyGenerator
+              orderIdFromOrderList={proxyGeneratorOrderId}
+              onBackToOrders={() => {
+                dispatch(setProxyGeneratorOrderId(null));
+                dispatch(setActivePage('overview'));
+              }}
+              onOpenProxyCheckerWithProxies={(proxies) => {
+                dispatch(setProxyCheckerInitialProxies(proxies));
+                dispatch(setActivePage('proxy-checker'));
+              }}
+            />
           ) : activePage === 'deposit' ? (
             <DepositPage />
           ) : activePage === 'support' ? (
@@ -153,6 +177,8 @@ export default function App() {
             <AddonsPage />
           ) : activePage === 'plans' ? (
             <PlansPage onNavigateToDeposit={() => dispatch(setActivePage('deposit'))} />
+          ) : activePage === 'purchase' ? (
+            <PurchasePage onNavigateToDeposit={() => dispatch(setActivePage('deposit'))} />
           ) : (
             <SettingsPage theme={theme} setTheme={(t) => dispatch(setTheme(t))} />
           )}

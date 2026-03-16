@@ -11,6 +11,16 @@ function buildReferralLink(code: string): string {
   return `${origin}/register?ref=${code}`;
 }
 
+/** Volume tiers (USD) — must match API commissionTiers. Used to show "next tier at $X" on UI. */
+const COMMISSION_VOLUME_TIERS = [0, 500, 2000, 10000];
+
+function getNextTierMinVolume(volumeUsd: number): number | null {
+  for (const tier of COMMISSION_VOLUME_TIERS) {
+    if (volumeUsd < tier) return tier;
+  }
+  return null;
+}
+
 const REFERRAL_LEVELS = [
   { emoji: '🥉', name: 'Bronze', percent: 5 },
   { emoji: '🥈', name: 'Silver', percent: 10 },
@@ -31,11 +41,13 @@ const AffiliatePage = () => {
 
   const totalReferrals = stats?.totalReferrals ?? 0;
   const totalEarnings = stats?.totalEarnings ?? 0;
+  const totalReferralVolume = stats?.totalReferralVolume ?? 0;
   const commissionRate = stats?.commissionRate ?? 5;
   const referralCode = stats?.referralCode ?? '';
   const referralLevel = (stats?.referralLevel ?? 'bronze').toLowerCase();
   const levelLabel = referralLevel.charAt(0).toUpperCase() + referralLevel.slice(1);
   const referralLink = referralCode ? buildReferralLink(referralCode) : '';
+  const nextTierAt = getNextTierMinVolume(totalReferralVolume);
 
   const copyReferralLink = async () => {
     if (!referralLink) return;
@@ -166,6 +178,11 @@ const AffiliatePage = () => {
             </li>
           ))}
         </ul>
+        {nextTierAt != null && (
+          <p className="mt-3 text-sm text-text-muted">
+            {t('affiliate.nextTierAt', { amount: nextTierAt.toLocaleString() })}
+          </p>
+        )}
       </div>
 
       {/* How it works — as in old UI */}

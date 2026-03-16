@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'motion/react';
-import { Globe, RefreshCw, FileText, Copy, Download, ChevronDown } from 'lucide-react';
+import { Globe, RefreshCw, FileText, Copy, Download, ChevronDown, ChevronLeft, CheckCircle2 } from 'lucide-react';
 import CustomSelect from './CustomSelect';
 import AutoDismissAlert from './AutoDismissAlert';
 import { ordersApi, type Order } from '../api';
@@ -19,7 +19,13 @@ function findFirstGbOrder(orders: Order[]): Order | null {
   return null;
 }
 
-const ProxyGenerator = () => {
+interface ProxyGeneratorProps {
+  orderIdFromOrderList?: number | null;
+  onBackToOrders?: () => void;
+  onOpenProxyCheckerWithProxies?: (proxies: string) => void;
+}
+
+const ProxyGenerator: React.FC<ProxyGeneratorProps> = ({ orderIdFromOrderList = null, onBackToOrders, onOpenProxyCheckerWithProxies }) => {
   const { t } = useTranslation('app');
   const [sessionType, setSessionType] = useState('Sticky session');
   const [proxyCount, setProxyCount] = useState(1);
@@ -41,11 +47,43 @@ const ProxyGenerator = () => {
   const formats = ['username:password@host:port', 'host:port:username:password'];
 
   const gbOrder = useMemo(() => findFirstGbOrder(orders), [orders]);
+  const effectiveOrderId = orderIdFromOrderList ?? gbOrder?.id ?? null;
   const maxToGenerate = Math.max(0, subCredsLimit - subCredsCount);
-  const canGenerate = gbOrder != null && maxToGenerate > 0;
+  const canGenerate = effectiveOrderId != null && maxToGenerate > 0;
+  const showBackButton = orderIdFromOrderList != null && typeof onBackToOrders === 'function';
 
   useEffect(() => {
     let cancelled = false;
+    if (orderIdFromOrderList != null) {
+      setOrdersLoading(true);
+      setSubCredsLimit(0);
+      setSubCredsCount(0);
+      ordersApi
+        .getSubCredentials(orderIdFromOrderList)
+        .then((res) => {
+          if (!cancelled) {
+            if (res.success) {
+              setSubCredsLimit(res.limit);
+              setSubCredsCount(res.data.length);
+              const existing = res.formattedLines?.length
+                ? res.formattedLines.join('\n')
+                : res.data.map((r) => r.credentialsString).filter(Boolean).join('\n');
+              if (existing) setGeneratedProxies(existing);
+            } else {
+              setSubCredsLimit(0);
+              setSubCredsCount(0);
+            }
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setSubCredsLimit(0);
+            setSubCredsCount(0);
+          }
+        })
+        .finally(() => !cancelled && setOrdersLoading(false));
+      return () => { cancelled = true; };
+    }
     ordersApi
       .getOrders()
       .then((list) => {
@@ -59,6 +97,10 @@ const ProxyGenerator = () => {
               if (!cancelled && res.success) {
                 setSubCredsLimit(res.limit);
                 setSubCredsCount(res.data.length);
+                const existing = res.formattedLines?.length
+                  ? res.formattedLines.join('\n')
+                  : res.data.map((r) => r.credentialsString).filter(Boolean).join('\n');
+                if (existing) setGeneratedProxies(existing);
               }
             })
             .catch(() => {});
@@ -66,16 +108,16 @@ const ProxyGenerator = () => {
       })
       .finally(() => !cancelled && setOrdersLoading(false));
     return () => { cancelled = true; };
-  }, [generatedProxies]);
+  }, [generatedProxies, orderIdFromOrderList]);
 
   const generate = async () => {
-    if (!gbOrder) return;
+    if (effectiveOrderId == null) return;
     const count = Math.min(Math.max(1, Math.floor(proxyCount)), maxToGenerate);
     if (count < 1) return;
     setIsGenerating(true);
     setGenerateError(null);
     try {
-      const res = await ordersApi.generateSubCredentials(gbOrder.id, count);
+      const res = await ordersApi.generateSubCredentials(effectiveOrderId, count);
       if (res.success && res.credentials?.length) {
         setGeneratedProxies(res.credentials.join('\n'));
         setSubCredsCount((prev) => prev + res.credentials.length);
@@ -106,6 +148,18 @@ const ProxyGenerator = () => {
 
   return (
     <div className="space-y-8">
+      {showBackButton && (
+        <div>
+          <button
+            type="button"
+            onClick={onBackToOrders}
+            className="inline-flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-accent-primary transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            {t('proxyGenerator.backToOrders')}
+          </button>
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="glass-panel p-6 lg:p-8 rounded-2xl space-y-6">
           <div className="flex items-center gap-3 mb-2">
@@ -113,13 +167,13 @@ const ProxyGenerator = () => {
             <h3 className="text-sm font-bold uppercase tracking-widest text-text-primary">{t('proxyGenerator.proxyConfig')}</h3>
           </div>
 
-          {!ordersLoading && !gbOrder && (
+          {!ordersLoading && effectiveOrderId == null && (
             <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-400 text-sm px-4 py-3">
               {t('proxyGenerator.noGbOrder')}
             </div>
           )}
 
-          {gbOrder && (
+          {effectiveOrderId != null && (
             <p className="text-[10px] text-text-muted uppercase tracking-wider">
               {t('proxyGenerator.subCredsUsed', { used: subCredsCount, limit: subCredsLimit, more: maxToGenerate })}
             </p>
@@ -198,7 +252,18 @@ const ProxyGenerator = () => {
               <FileText className="w-5 h-5 text-accent-primary" />
               <h3 className="text-sm font-bold uppercase tracking-widest text-text-primary">{t('proxyGenerator.generatedList')}</h3>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              {typeof onOpenProxyCheckerWithProxies === 'function' && (
+                <button
+                  type="button"
+                  onClick={() => onOpenProxyCheckerWithProxies(generatedProxies)}
+                  disabled={!generatedProxies.trim()}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border-main/20 bg-bg-panel hover:bg-bg-input hover:border-accent-primary/30 text-text-secondary hover:text-accent-primary transition-colors disabled:opacity-50 text-xs font-bold uppercase tracking-wider"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  {t('proxyGenerator.checkInProxyChecker')}
+                </button>
+              )}
               <button
                 onClick={copyToClipboard}
                 disabled={!generatedProxies}

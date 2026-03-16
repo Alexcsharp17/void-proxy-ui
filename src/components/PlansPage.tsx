@@ -97,13 +97,6 @@ export default function PlansPage({ onNavigateToDeposit }: PlansPageProps) {
 
   return (
     <div className="max-w-7xl mx-auto w-full space-y-12 pb-8">
-      <header className="mb-12">
-        <h2 className="text-3xl md:text-4xl font-bold text-text-primary tracking-tight mb-2">
-          {t('plans.choosePlan')}
-        </h2>
-        <div className="h-1 w-20 rounded-full bg-accent-primary" aria-hidden />
-      </header>
-
       <section>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
           {products.map((product, index) => (

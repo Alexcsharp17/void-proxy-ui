@@ -18,22 +18,10 @@ export interface TelegramLoginData {
   initData?: string;
 }
 
-function isNetworkError(error: unknown): boolean {
-  if (error && typeof error === 'object') {
-    const err = error as { response?: { status?: number }; code?: string };
-    if (err.response === undefined) return true;
-    if (err.code === 'ERR_NETWORK' || err.code === 'ECONNABORTED') return true;
-    if (typeof err.response?.status === 'number' && err.response.status >= 500) return true;
-  }
-  return false;
-}
-
 interface AuthContextValue {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  apiUnreachable: boolean;
-  retryAuth: () => Promise<void>;
   login: (email: string, password: string, turnstileToken?: string) => Promise<boolean>;
   loginByApiKey: (apiKey: string) => Promise<boolean>;
   loginWithTelegram: (data: TelegramLoginData) => Promise<boolean>;
@@ -74,7 +62,6 @@ async function ensureApiKeyAndStore(token: string, user: User): Promise<void> {
 export function AuthProvider({ children, onUnauthorizedRedirect }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [apiUnreachable, setApiUnreachable] = useState(false);
 
   const clearSession = useCallback(() => {
     setApiToken(null);
@@ -87,7 +74,6 @@ export function AuthProvider({ children, onUnauthorizedRedirect }: AuthProviderP
   }, []);
 
   const checkAuth = useCallback(async () => {
-    setApiUnreachable(false);
     const token = localStorage.getItem(STORAGE_TOKEN);
     if (!token) {
       setApiToken(null);
@@ -99,15 +85,10 @@ export function AuthProvider({ children, onUnauthorizedRedirect }: AuthProviderP
     try {
       const profile = await userApi.getProfile();
       setUser(profile);
-      setApiUnreachable(false);
       try {
         localStorage.setItem(STORAGE_USER, JSON.stringify(profile));
       } catch {}
-    } catch (e) {
-      if (isNetworkError(e)) {
-        setApiUnreachable(true);
-        return;
-      }
+    } catch {
       const stored = localStorage.getItem(STORAGE_USER);
       if (stored) {
         try {
@@ -217,18 +198,10 @@ export function AuthProvider({ children, onUnauthorizedRedirect }: AuthProviderP
     clearSession();
   }, [clearSession]);
 
-  const retryAuth = useCallback(async () => {
-    setApiUnreachable(false);
-    setIsLoading(true);
-    await checkAuth();
-  }, [checkAuth]);
-
   const value: AuthContextValue = {
     user,
     isAuthenticated: !!user,
     isLoading,
-    apiUnreachable,
-    retryAuth,
     login,
     loginByApiKey,
     loginWithTelegram,

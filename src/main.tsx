@@ -20,6 +20,9 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
 import ProxiesPage from './pages/ProxiesPage';
 import RootRoute from './pages/RootRoute';
+import PrivacyPage from './pages/PrivacyPage';
+import TermsPage from './pages/TermsPage';
+import CookiesPage from './pages/CookiesPage';
 import NotFoundPage from './pages/NotFoundPage';
 import App from './App.tsx';
 import './index.css';
@@ -42,6 +45,9 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/verify-email" element={<VerifyEmailPage />} />
             <Route path="/proxies" element={<ProxiesPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/cookies" element={<CookiesPage />} />
             <Route path="/" element={<RootRoute />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>

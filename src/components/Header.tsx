@@ -21,6 +21,7 @@ const Header: React.FC<HeaderProps> = ({ activePage, onMenuClick, onSettingsClic
   const dispatch = useDispatch();
   const { t } = useTranslation('app');
   const locale = useSelector((s: RootState) => s.app.locale);
+  const purchaseSegment = useSelector((s: RootState) => s.app.purchaseSegment);
   const [langOpen, setLangOpen] = useState(false);
   const langRef = useRef<HTMLDivElement>(null);
 
@@ -44,6 +45,7 @@ const Header: React.FC<HeaderProps> = ({ activePage, onMenuClick, onSettingsClic
       case 'proxy-generator': return t('header.proxyGenerator');
       case 'deposit': return t('header.deposit');
       case 'plans': return t('header.plans');
+      case 'purchase': return purchaseSegment === 'unlimited' ? t('header.plansPricingUnlimited') : t('header.plansPricingGb');
       case 'addons': return t('header.addons');
       case 'support': return t('header.support');
       case 'settings': return t('header.settings');
@@ -60,6 +62,7 @@ const Header: React.FC<HeaderProps> = ({ activePage, onMenuClick, onSettingsClic
       case 'proxy-generator': return t('header.subtitleProxyGenerator');
       case 'deposit': return t('header.subtitleDeposit');
       case 'plans': return t('header.subtitlePlans');
+      case 'purchase': return '';
       case 'addons': return t('header.subtitleAddons');
       case 'support': return t('header.subtitleSupport');
       case 'settings': return t('header.subtitleSettings');
@@ -82,9 +85,9 @@ const Header: React.FC<HeaderProps> = ({ activePage, onMenuClick, onSettingsClic
           <h2 className="text-2xl lg:text-3xl font-bold text-text-primary">
             {getTitle()}
           </h2>
-          <p className="text-text-secondary text-xs lg:text-sm mt-1">
-            {getSubtitle()}
-          </p>
+          {getSubtitle() ? (
+            <p className="text-text-secondary text-xs lg:text-sm mt-1">{getSubtitle()}</p>
+          ) : null}
         </div>
       </div>
 

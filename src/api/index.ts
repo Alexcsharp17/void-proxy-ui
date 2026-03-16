@@ -5,6 +5,7 @@ export { ordersApi } from './orders.api';
 export { proxiesApi } from './proxies.api';
 export { resellerApi, type ResellerDashboardStats } from './reseller.api';
 export { productsApi } from './products.api';
+export { promoApi, type PromoCodeDto, type ValidatePromoResponse, type ApplyPromoResponse } from './promo.api';
 export {
   paymentsApi,
   type PaymentProvider,

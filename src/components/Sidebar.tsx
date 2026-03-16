@@ -62,8 +62,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onPageChange, onClose }) 
         <SidebarItem 
           icon={CreditCard} 
           label={t('sidebar.plansPricing')} 
-          active={activePage === 'plans'}
-          onClick={() => handlePageClick('plans')}
+          active={activePage === 'purchase'}
+          onClick={() => handlePageClick('purchase')}
         />
         <SidebarItem 
           icon={PlusCircle} 

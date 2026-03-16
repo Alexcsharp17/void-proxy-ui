@@ -29,21 +29,27 @@ function getStatusIconStyles(status: Order['status']): { container: string; tool
   }
 }
 
-const OrderRow: React.FC<{ order: Order }> = ({ order }) => {
+const OrderRow: React.FC<{ order: Order; onOrderClick?: (order: Order) => void }> = ({ order, onOrderClick }) => {
   const [showTooltip, setShowTooltip] = useState(false);
   const statusStyles = getStatusIconStyles(order.status);
   const statusLabel = toText(order.status);
 
   return (
     <div
-      className="flex items-center justify-between p-6 border-b border-border-main/10 hover:bg-bg-input/30 transition-colors group"
-      onMouseEnter={() => setShowTooltip(true)}
-      onMouseLeave={() => setShowTooltip(false)}
+      role={onOrderClick ? 'button' : undefined}
+      tabIndex={onOrderClick ? 0 : undefined}
+      onClick={onOrderClick ? () => onOrderClick(order) : undefined}
+      onKeyDown={onOrderClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOrderClick(order); } } : undefined}
+      className={`flex items-center justify-between p-6 border-b border-border-main/10 transition-colors group ${onOrderClick ? 'cursor-pointer hover:bg-bg-input/30' : ''}`}
     >
-      <div className="flex items-center gap-4">
-        <div className="relative">
+      <div
+        className="flex items-center gap-4"
+        onMouseEnter={() => setShowTooltip(true)}
+        onMouseLeave={() => setShowTooltip(false)}
+      >
+        <div className="relative shrink-0">
           <div
-            className={`w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 transition-colors cursor-default ${statusStyles.container}`}
+            className={`w-10 h-10 rounded-xl border flex items-center justify-center transition-colors cursor-default ${statusStyles.container}`}
             aria-label={statusLabel}
           >
             {order.icon}

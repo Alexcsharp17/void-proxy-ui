@@ -1,84 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Globe, Moon, Sun, CheckCircle2, Trash2, Zap, Loader2 } from 'lucide-react';
+import { Globe, Moon, Sun, CheckCircle2, Trash2 } from 'lucide-react';
 import CustomSelect from './CustomSelect';
 import { useAuth } from '../contexts/AuthContext';
-import { ordersApi } from '../api';
-import type { Order } from '../api/types';
-import { toServiceType } from '../enums/api';
-
-function findFirstGbOrder(orders: Order[]): Order | null {
-  for (const o of orders) {
-    if (toServiceType(o.serviceType) !== 'Proxies') continue;
-    const baseUnit = (o as Order & { baseUnit?: string }).baseUnit ?? '';
-    const displayUnit = (o as Order & { displayUnit?: string }).displayUnit ?? '';
-    if (baseUnit === 'second' && /^hour$/i.test(displayUnit)) continue;
-    if (baseUnit === 'byte' && /^gb$/i.test(displayUnit)) return o;
-  }
-  return null;
-}
 
 const SettingsPage = ({ theme, setTheme }: { theme: 'light' | 'dark', setTheme: (t: 'light' | 'dark') => void }) => {
   const { t } = useTranslation('app');
   const [language, setLanguage] = useState('English');
   const { user } = useAuth();
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [ordersLoading, setOrdersLoading] = useState(true);
-  const [autoReplenishSaving, setAutoReplenishSaving] = useState(false);
-  const [amountInput, setAmountInput] = useState('');
 
   const email = user?.email && !String(user.email).startsWith('telegram_') ? user.email : null;
   const isEmailVerified = user?.isEmailVerified ?? false;
   const hasTelegram = Boolean(user?.telegramId);
-
-  const gbOrder = findFirstGbOrder(orders);
-  const autoRefill = gbOrder?.autoRefill ?? false;
-  const autoRefillAmountGb = gbOrder?.autoRefillAmountGb ?? null;
-
-  useEffect(() => {
-    let cancelled = false;
-    setOrdersLoading(true);
-    ordersApi
-      .getOrders()
-      .then((list) => !cancelled && setOrders(list))
-      .catch(() => !cancelled && setOrders([]))
-      .finally(() => !cancelled && setOrdersLoading(false));
-    return () => { cancelled = true; };
-  }, []);
-
-  useEffect(() => {
-    if (gbOrder != null) {
-      setAmountInput(gbOrder.autoRefillAmountGb != null ? String(gbOrder.autoRefillAmountGb) : '');
-    }
-  }, [gbOrder?.id, gbOrder?.autoRefillAmountGb]);
-
-  const handleAutoRefillToggle = async () => {
-    if (!gbOrder) return;
-    setAutoReplenishSaving(true);
-    try {
-      const updated = await ordersApi.updateOrder(gbOrder.id, { autoRefill: !autoRefill });
-      setOrders((prev) => prev.map((o) => (o.id === gbOrder.id ? { ...o, autoRefill: updated.autoRefill, autoRefillAmountGb: updated.autoRefillAmountGb } : o)));
-    } finally {
-      setAutoReplenishSaving(false);
-    }
-  };
-
-  const handleAmountBlur = async () => {
-    if (!gbOrder) return;
-    const num = parseFloat(amountInput);
-    if (Number.isNaN(num) || num < 0.01 || num > 1000) {
-      setAmountInput(gbOrder.autoRefillAmountGb != null ? String(gbOrder.autoRefillAmountGb) : '');
-      return;
-    }
-    if (num === (gbOrder.autoRefillAmountGb ?? 0)) return;
-    setAutoReplenishSaving(true);
-    try {
-      const updated = await ordersApi.updateOrder(gbOrder.id, { autoRefillAmountGb: num });
-      setOrders((prev) => prev.map((o) => (o.id === gbOrder.id ? { ...o, autoRefillAmountGb: updated.autoRefillAmountGb } : o)));
-    } finally {
-      setAutoReplenishSaving(false);
-    }
-  };
 
   return (
     <div className="space-y-8">
@@ -119,74 +52,6 @@ const SettingsPage = ({ theme, setTheme }: { theme: 'light' | 'dark', setTheme: 
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Auto Replenish — привязано к первому GB-заказу */}
-          <div className="glass-panel p-6 lg:p-8 rounded-2xl space-y-6">
-            <div className="flex items-center gap-3 mb-2">
-              <Zap className="w-5 h-5 text-accent-primary" />
-              <h4 className="text-sm font-bold uppercase tracking-widest text-text-primary">{t('settings.autoReplenish')}</h4>
-            </div>
-            <p className="text-xs text-text-secondary">{t('settings.autoReplenishDesc')}</p>
-
-            {ordersLoading ? (
-              <div className="flex items-center gap-2 text-text-muted text-sm">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                {t('common.loading')}
-              </div>
-            ) : !gbOrder ? (
-              <p className="text-sm text-text-muted">{t('settings.autoReplenishNoOrder')}</p>
-            ) : (
-              <>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-text-secondary uppercase tracking-wider block">{t('settings.autoReplenishToggleDesc')}</label>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-bold text-text-primary">
-                      {autoRefill ? t('settings.autoReplenishEnabled') : t('settings.autoReplenishDisabled')}
-                    </span>
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={autoRefill}
-                      disabled={autoReplenishSaving}
-                      onClick={handleAutoRefillToggle}
-                      className={`relative w-11 h-6 rounded-full border transition-colors shrink-0 ${autoRefill ? 'bg-accent-primary border-accent-primary' : 'bg-bg-input border-border-main/20'}`}
-                    >
-                      <span
-                        className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${autoRefill ? 'translate-x-5' : 'translate-x-0'}`}
-                      />
-                    </button>
-                  </div>
-                </div>
-
-                {autoRefill && (
-                  <>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-bold text-text-secondary uppercase tracking-wider">{t('settings.autoReplenishMode')}</label>
-                      <div className="px-4 py-3 rounded-xl bg-bg-input border border-border-main/20 text-sm text-text-primary">
-                        {t('settings.autoReplenishModeThreshold')}
-                      </div>
-                      <p className="text-xs text-text-muted">{t('settings.autoReplenishModeDesc')}</p>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-bold text-text-secondary uppercase tracking-wider">{t('settings.autoReplenishAmount')}</label>
-                      <input
-                        type="number"
-                        min={0.01}
-                        max={1000}
-                        step={0.01}
-                        value={amountInput}
-                        onChange={(e) => setAmountInput(e.target.value)}
-                        onBlur={handleAmountBlur}
-                        disabled={autoReplenishSaving}
-                        className="w-full max-w-[12rem] px-4 py-2.5 rounded-xl bg-bg-input border border-border-main/20 text-text-primary text-sm focus:border-accent-primary/50 focus:outline-none"
-                      />
-                      <p className="text-xs text-text-muted">{t('settings.autoReplenishAmountHint')}</p>
-                    </div>
-                  </>
-                )}
-              </>
-            )}
           </div>
 
           {/* Login methods — content from old UI, layout as in new */}

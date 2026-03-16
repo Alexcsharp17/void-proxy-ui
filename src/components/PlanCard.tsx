@@ -183,9 +183,6 @@ export default function PlanCard({ product, onNavigateToDeposit, showResellerBad
           <thead>
             <tr className="border-b border-border-main/50 text-[10px] font-label uppercase tracking-widest text-text-muted">
               <th className="pb-4 font-normal">{t('plans.packageHeader')}</th>
-              {!isUnlimited && (
-                <th className="pb-4 font-normal">{t('plans.trafficHeader')}</th>
-              )}
               <th className="pb-4 font-normal text-right">
                 {isUnlimited ? t('plans.priceHeader') : t('plans.pricePerGb')}
               </th>
@@ -214,11 +211,6 @@ export default function PlanCard({ product, onNavigateToDeposit, showResellerBad
                       {entry.packageDisplayName || entry.quantityDisplay}
                     </div>
                   </td>
-                  {!isUnlimited && (
-                    <td className="py-4 text-sm text-text-secondary">
-                      {entry.quantityDisplay}
-                    </td>
-                  )}
                   <td className="py-4 text-right">
                     <span className="text-lg font-bold text-text-primary">
                       ${formatPrice(entry.totalPrice)}

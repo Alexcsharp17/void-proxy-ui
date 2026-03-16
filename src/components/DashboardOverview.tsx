@@ -14,7 +14,10 @@ interface DashboardOverviewProps {
   showDeletionBanner?: boolean;
   deletionCountdown?: string;
   onDepositClick?: () => void;
+  onOrderClick?: (order: Order) => void;
 }
+
+const ORDERS_THRESHOLD_COMPACT = 3;
 
 const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   dashboardData,
@@ -23,9 +26,11 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   showDeletionBanner = false,
   deletionCountdown = '00:00:00',
   onDepositClick,
+  onOrderClick,
 }) => {
   const { t } = useTranslation('app');
   const [page, setPage] = useState(1);
+  const isCompact = orders.length > ORDERS_THRESHOLD_COMPACT;
 
   const totalPages = useMemo(() => Math.max(1, Math.ceil(orders.length / ORDERS_PER_PAGE)), [orders.length]);
   const paginatedOrders = useMemo(
@@ -87,15 +92,15 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
     {/* Bento Grid Section */}
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
       {/* Usage Overview */}
-      <div className="bg-bg-panel/40 backdrop-blur-xl rounded-2xl border border-border-main p-6 lg:p-8 flex flex-col">
-        <div className="flex justify-between items-center mb-8">
+      <div className={`bg-bg-panel/40 backdrop-blur-xl rounded-2xl border border-border-main flex flex-col ${isCompact ? 'px-5 pt-5 pb-4 lg:px-6 lg:pt-6 lg:pb-5' : 'p-6 lg:p-8'}`}>
+        <div className={`flex justify-between items-center ${isCompact ? 'mb-5' : 'mb-8'}`}>
           <h3 className="text-xs font-bold uppercase tracking-widest text-text-primary">{t('dashboard.usageOverview')}</h3>
           <button className="text-accent-primary text-[10px] font-bold flex items-center gap-1 hover:underline uppercase tracking-wider">
             {t('dashboard.purchaseGb')} <ArrowRight className="w-3 h-3" />
           </button>
         </div>
         
-        <div className="flex flex-col md:flex-row items-center gap-8 lg:gap-12">
+        <div className={`flex flex-col md:flex-row items-center ${isCompact ? 'gap-6 lg:gap-10' : 'gap-8 lg:gap-12'}`}>
           <div className="relative w-40 h-40 shrink-0">
             <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
               <circle 
@@ -123,13 +128,13 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             <div className="absolute top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-accent-primary rounded-full shadow-[0_0_10px_var(--accent-primary)]"></div>
           </div>
 
-          <div className="flex-1 w-full space-y-3">
+          <div className={`flex-1 w-full ${isCompact ? 'space-y-2' : 'space-y-3'}`}>
             {[
               { labelKey: 'dashboard.total', value: dashboardData?.usage?.total ?? '0', unit: 'GB', color: 'text-accent-primary' },
               { labelKey: 'dashboard.used', value: dashboardData?.usage?.used ?? '0', unit: 'GB', color: 'text-orange-400' },
               { labelKey: 'dashboard.left', value: dashboardData?.usage?.left ?? '0', unit: 'GB', color: 'text-accent-primary' }
             ].map((stat) => (
-              <div key={stat.labelKey} className="flex items-center justify-between p-3 rounded-xl bg-bg-input/50">
+              <div key={stat.labelKey} className={`flex items-center justify-between rounded-xl bg-bg-input/50 ${isCompact ? 'py-2.5 px-3' : 'p-3'}`}>
                 <span className="text-[10px] font-bold text-text-secondary uppercase tracking-wider">{t(stat.labelKey)}</span>
                 <span className={`text-sm font-bold font-mono ${stat.color}`}>
                   {stat.value} <span className="text-[10px]">{stat.unit}</span>
@@ -141,25 +146,30 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       </div>
 
       {/* Getting Started */}
-      <div className="bg-bg-panel/40 backdrop-blur-xl rounded-2xl border border-border-main p-6 lg:p-8">
-        <h3 className="text-xs font-bold uppercase tracking-widest text-text-primary mb-8">{t('dashboard.gettingStarted')}</h3>
-        <div className="space-y-3">
+      <div className={`bg-bg-panel/40 backdrop-blur-xl rounded-2xl border border-border-main ${isCompact ? 'px-5 pt-5 pb-4 lg:px-6 lg:pt-6 lg:pb-5' : 'p-6 lg:p-8'}`}>
+        <h3 className={`text-xs font-bold uppercase tracking-widest text-text-primary ${isCompact ? 'mb-5' : 'mb-8'}`}>{t('dashboard.gettingStarted')}</h3>
+        <div className={isCompact ? 'space-y-2' : 'space-y-3'}>
           {[
             { step: 1, titleKey: 'dashboard.addFunds', descKey: 'dashboard.depositCrypto', onClick: onDepositClick },
             { step: 2, titleKey: 'dashboard.buyGb', descKey: 'dashboard.purchaseBandwidth', onClick: undefined },
             { step: 3, titleKey: 'dashboard.generateProxies', descKey: 'dashboard.createYourList', onClick: undefined }
           ].map((item) => (
-            <button key={item.step} type="button" onClick={item.onClick} className="w-full flex items-center justify-between p-4 rounded-xl bg-bg-panel hover:border-accent-primary/30 transition-all group border border-transparent">
-              <div className="flex items-center gap-4">
-                <div className="w-8 h-8 rounded bg-accent-primary flex items-center justify-center text-[#00236d] text-xs font-bold shadow-lg shadow-accent-primary/20">
+            <button
+              key={item.step}
+              type="button"
+              onClick={item.onClick}
+              className={`w-full flex items-center justify-between rounded-xl bg-bg-panel hover:border-accent-primary/30 transition-all group border border-transparent ${isCompact ? 'py-2.5 px-3' : 'p-4'}`}
+            >
+              <div className={isCompact ? 'flex items-center gap-3' : 'flex items-center gap-4'}>
+                <div className={`rounded bg-accent-primary flex items-center justify-center text-[#00236d] font-bold shrink-0 ${isCompact ? 'w-6 h-6 text-[10px] shadow-md shadow-accent-primary/20' : 'w-8 h-8 text-xs shadow-lg shadow-accent-primary/20'}`}>
                   {item.step}
                 </div>
-                <div className="text-left">
-                  <p className="text-sm font-bold">{t(item.titleKey)}</p>
-                  <p className="text-[10px] text-text-secondary">{t(item.descKey)}</p>
+                <div className="text-left min-w-0">
+                  <p className={isCompact ? 'text-xs font-bold leading-tight' : 'text-sm font-bold'}>{t(item.titleKey)}</p>
+                  <p className="text-[10px] text-text-secondary leading-tight">{t(item.descKey)}</p>
                 </div>
               </div>
-              <ArrowRight className="w-4 h-4 text-text-muted/40 group-hover:text-accent-primary transition-colors" />
+              <ArrowRight className={`text-text-muted/40 group-hover:text-accent-primary transition-colors shrink-0 ${isCompact ? 'w-3.5 h-3.5' : 'w-4 h-4'}`} />
             </button>
           ))}
         </div>
@@ -180,7 +190,9 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         {loading ? (
           <div className="p-6 text-text-secondary text-sm">{t('dashboard.loadingOrders')}</div>
         ) : (
-          paginatedOrders.map((order) => <OrderRow key={order.id} order={order} />)
+          paginatedOrders.map((order) => (
+            <OrderRow key={order.id} order={order} onOrderClick={onOrderClick} />
+          ))
         )}
       </div>
 
