@@ -126,25 +126,34 @@
     text-shadow: 0 0 20px rgba(100, 138, 255, 0.35);
   }
 
-  /* Auth forms: force dark input background (hover + autofill) */
+  /* Auth forms: visible input fields (brighter border + panel background so they stand out on dark) */
   .auth-form input,
   .auth-form textarea {
-    background-color: var(--bg-input) !important;
+    background-color: var(--bg-panel) !important;
+    border: 1px solid rgba(141, 144, 160, 0.5) !important;
+    transition: border-color 0.2s, box-shadow 0.2s;
   }
   .auth-form input:hover,
+  .auth-form textarea:hover {
+    background-color: var(--bg-panel) !important;
+    border-color: rgba(141, 144, 160, 0.65) !important;
+  }
   .auth-form input:focus,
-  .auth-form textarea:hover,
   .auth-form textarea:focus {
-    background-color: var(--bg-input) !important;
+    background-color: var(--bg-panel) !important;
+    border-color: var(--accent-primary) !important;
+    box-shadow: 0 0 0 2px rgba(100, 138, 255, 0.25) !important;
+    outline: none !important;
   }
   .auth-form input:-webkit-autofill,
   .auth-form input:-webkit-autofill:hover,
   .auth-form input:-webkit-autofill:focus,
   .auth-form input:-webkit-autofill:active {
     -webkit-text-fill-color: var(--text-primary) !important;
-    -webkit-box-shadow: 0 0 0 1000px var(--bg-input) inset !important;
-    box-shadow: 0 0 0 1000px var(--bg-input) inset !important;
-    background-color: var(--bg-input) !important;
+    -webkit-box-shadow: 0 0 0 1000px var(--bg-panel) inset !important;
+    box-shadow: 0 0 0 1000px var(--bg-panel) inset !important;
+    background-color: var(--bg-panel) !important;
+    border: 1px solid rgba(141, 144, 160, 0.5) !important;
   }
 
   /* Purchase page range slider: track fill (accent up to value) */

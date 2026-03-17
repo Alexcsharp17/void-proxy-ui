@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useDispatch } from 'react-redux';
 import {
   Users,
   ShoppingCart,
@@ -13,10 +14,13 @@ import {
   Trash2,
   ExternalLink,
   Loader2,
+  Package,
+  Lock,
 } from 'lucide-react';
 import { useResellerStats } from '../hooks/useResellerStats';
 import { useAuth } from '../contexts/AuthContext';
 import { authApi, userApi, resellerApi, getApiToken, BASE_URL } from '../api';
+import { setActivePage } from '../store/slices/appSlice';
 import AutoDismissAlert from './AutoDismissAlert';
 
 function isValidIpOrCidr(ip: string): boolean {
@@ -38,6 +42,7 @@ function isValidIpOrCidr(ip: string): boolean {
 
 const ResellingPage = () => {
   const { t } = useTranslation('app');
+  const dispatch = useDispatch();
   const { user } = useAuth();
   const { data: stats, loading: loadingUsage, error, isReseller } = useResellerStats();
   const [errorDismissed, setErrorDismissed] = useState(false);
@@ -211,17 +216,25 @@ const ResellingPage = () => {
     );
   }
 
-  if (!isReseller || error) {
+  if (!isReseller) {
     return (
       <div className="space-y-8">
-        <AutoDismissAlert
-          variant="danger"
-          message={error ?? ''}
-          show={!!error && !errorDismissed}
-          onClose={() => setErrorDismissed(true)}
-        />
-        <div className="glass-panel p-8 rounded-2xl border border-amber-500/30 bg-amber-500/10 text-amber-400 text-sm">
-          {t('reselling.resellerOnly')}
+        <div className="glass-panel p-8 md:p-10 rounded-2xl border border-border-main flex flex-col items-center justify-center text-center max-w-lg mx-auto">
+          <div className="w-14 h-14 rounded-2xl bg-accent-primary/20 flex items-center justify-center text-accent-primary mb-4">
+            <Lock className="w-7 h-7" />
+          </div>
+          <h2 className="text-xl font-bold text-text-primary mb-2">{t('reselling.unlockTitle')}</h2>
+          <p className="text-text-secondary text-sm leading-relaxed mb-6">
+            {t('reselling.unlockMessage')}
+          </p>
+          <button
+            type="button"
+            onClick={() => dispatch(setActivePage('addons'))}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent-primary/20 border border-accent-primary/40 text-accent-primary hover:bg-accent-primary/30 transition-colors text-sm font-medium"
+          >
+            <Package className="w-4 h-4" />
+            {t('reselling.goToAddons')}
+          </button>
         </div>
       </div>
     );

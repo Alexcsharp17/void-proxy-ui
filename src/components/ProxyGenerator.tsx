@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'motion/react';
-import { Globe, RefreshCw, FileText, Copy, Download, ChevronDown, ChevronLeft, CheckCircle2 } from 'lucide-react';
+import { Globe, RefreshCw, FileText, Copy, Download, ChevronDown, ChevronLeft, CheckCircle2, Save } from 'lucide-react';
 import CustomSelect from './CustomSelect';
 import AutoDismissAlert from './AutoDismissAlert';
 import { ordersApi, type Order } from '../api';
@@ -35,6 +35,8 @@ const ProxyGenerator: React.FC<ProxyGeneratorProps> = ({ orderIdFromOrderList = 
   const [generatedProxies, setGeneratedProxies] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [subCredsLimit, setSubCredsLimit] = useState<number>(0);
@@ -108,7 +110,24 @@ const ProxyGenerator: React.FC<ProxyGeneratorProps> = ({ orderIdFromOrderList = 
       })
       .finally(() => !cancelled && setOrdersLoading(false));
     return () => { cancelled = true; };
-  }, [generatedProxies, orderIdFromOrderList]);
+  }, [orderIdFromOrderList]);
+
+  const refetchSubCredentials = async () => {
+    if (effectiveOrderId == null) return;
+    try {
+      const res = await ordersApi.getSubCredentials(effectiveOrderId);
+      if (res.success) {
+        setSubCredsLimit(res.limit);
+        setSubCredsCount(res.data.length);
+        const text = res.formattedLines?.length
+          ? res.formattedLines.join('\n')
+          : res.data.map((r) => r.credentialsString).filter(Boolean).join('\n');
+        setGeneratedProxies(text);
+      }
+    } catch {
+      // ignore
+    }
+  };
 
   const generate = async () => {
     if (effectiveOrderId == null) return;
@@ -121,6 +140,7 @@ const ProxyGenerator: React.FC<ProxyGeneratorProps> = ({ orderIdFromOrderList = 
       if (res.success && res.credentials?.length) {
         setGeneratedProxies(res.credentials.join('\n'));
         setSubCredsCount((prev) => prev + res.credentials.length);
+        await refetchSubCredentials();
       } else {
         setGenerateError('No credentials returned');
       }
@@ -129,6 +149,26 @@ const ProxyGenerator: React.FC<ProxyGeneratorProps> = ({ orderIdFromOrderList = 
       setGenerateError(err.response?.data?.message ?? err.message ?? 'Failed to generate proxies');
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const saveList = async () => {
+    if (effectiveOrderId == null) return;
+    const lines = generatedProxies.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+    setIsSaving(true);
+    setSaveError(null);
+    try {
+      const res = await ordersApi.applySubCredentialsSettings(effectiveOrderId, lines);
+      if (res.success) {
+        await refetchSubCredentials();
+      } else {
+        setSaveError('Failed to save list');
+      }
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string } }; message?: string };
+      setSaveError(err.response?.data?.message ?? err.message ?? 'Failed to save list');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -184,6 +224,12 @@ const ProxyGenerator: React.FC<ProxyGeneratorProps> = ({ orderIdFromOrderList = 
             message={generateError ?? ''}
             show={!!generateError}
             onClose={() => setGenerateError(null)}
+          />
+          <AutoDismissAlert
+            variant="danger"
+            message={saveError ?? ''}
+            show={!!saveError}
+            onClose={() => setSaveError(null)}
           />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -280,12 +326,23 @@ const ProxyGenerator: React.FC<ProxyGeneratorProps> = ({ orderIdFromOrderList = 
               >
                 <Download className="w-4 h-4" />
               </button>
+              <button
+                onClick={saveList}
+                disabled={isSaving || !generatedProxies.trim() || effectiveOrderId == null}
+                className="p-2 hover:bg-bg-input rounded-lg text-text-secondary hover:text-accent-primary transition-colors disabled:opacity-50"
+                title={t('proxyGenerator.saveList')}
+              >
+                <Save className="w-4 h-4" />
+              </button>
             </div>
           </div>
 
+          <p className="text-[10px] text-text-muted mb-1">
+            {t('proxyGenerator.saveListHint')}
+          </p>
           <textarea
-            readOnly
             value={generatedProxies}
+            onChange={(e) => setGeneratedProxies(e.target.value)}
             placeholder={t('proxyGenerator.generatedPlaceholder')}
             className="flex-1 w-full bg-bg-input/50 border border-border-main/20 rounded-xl p-4 text-xs font-mono text-accent-primary outline-none resize-none no-scrollbar min-h-[200px]"
           />

@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
 import { setLocale } from '../store/slices/appSlice';
-import { updateLanguage } from '../i18n/config';
 import type { RootState } from '../store';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -54,13 +53,20 @@ const staggerContainer = {
 };
 
 export default function LandingPage() {
-  const { t } = useTranslation('app');
+  const { t, i18n: i18nHook } = useTranslation('app');
   const dispatch = useDispatch();
-  const locale = useSelector((s: RootState) => s.app.locale);
+  const reduxLocale = useSelector((s: RootState) => s.app.locale);
+  // Use i18n.language so component re-renders when language changes (single source of truth for display)
+  const locale = (i18nHook.language?.split('-')[0] === 'ru' ? 'ru' : 'en') as 'en' | 'ru';
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const langRef = useRef<HTMLDivElement>(null);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
+
+  // Keep Redux in sync with i18n (for App/Header when user logs in)
+  useEffect(() => {
+    if (reduxLocale !== locale) dispatch(setLocale(locale));
+  }, [locale, reduxLocale, dispatch]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -71,6 +77,13 @@ export default function LandingPage() {
   }, []);
 
   const localeLabels: Record<'en' | 'ru', string> = { en: t('header.english'), ru: t('header.russian') };
+
+  const handleLocaleChange = async (l: 'en' | 'ru') => {
+    setLangOpen(false);
+    dispatch(setLocale(l));
+    await i18nHook.changeLanguage(l);
+    if (typeof window !== 'undefined') window.localStorage.setItem('i18nextLng', l);
+  };
 
   return (
     <div className="min-h-screen selection:bg-accent-primary/30 selection:text-bg-main bg-bg-main">
@@ -83,13 +96,13 @@ export default function LandingPage() {
             </a>
             <div className="hidden lg:flex items-center gap-8">
               <a href="#pricing" className="text-sm font-medium text-text-secondary hover:text-accent-primary transition-colors">
-                Pricing
+                {t('landing.navPricing')}
               </a>
               <a href="#faq" className="text-sm font-medium text-text-secondary hover:text-accent-primary transition-colors">
-                FAQ
+                {t('landing.navFaq')}
               </a>
               <a href="#features" className="text-sm font-medium text-text-secondary hover:text-accent-primary transition-colors">
-                Features
+                {t('landing.navFeatures')}
               </a>
             </div>
           </div>
@@ -110,11 +123,7 @@ export default function LandingPage() {
                     <button
                       key={l}
                       type="button"
-                      onClick={() => {
-                        dispatch(setLocale(l));
-                        updateLanguage(l);
-                        setLangOpen(false);
-                      }}
+                      onClick={() => handleLocaleChange(l)}
                       className={`w-full px-3 py-2 text-left text-[10px] font-bold uppercase tracking-widest transition-colors ${locale === l ? 'text-accent-primary bg-accent-primary/10' : 'text-text-secondary hover:bg-bg-input hover:text-text-primary'}`}
                     >
                       {localeLabels[l]}
@@ -127,19 +136,19 @@ export default function LandingPage() {
               to="/login"
               className="hidden md:block px-6 py-2.5 text-sm font-semibold text-text-secondary hover:text-text-primary transition-colors"
             >
-              Sign in
+              {t('landing.signIn')}
             </Link>
             <Link
               to="/register"
               className="px-4 md:px-6 py-2 md:py-2.5 text-xs md:text-sm font-bold bg-accent-primary text-bg-main rounded-lg md:rounded-xl hover:brightness-110 transition-all shadow-lg shadow-accent-primary/20"
             >
-              Get Started
+              {t('landing.getStarted')}
             </Link>
             <button
               type="button"
               className="lg:hidden p-2 text-text-secondary hover:text-text-primary transition-colors"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              aria-label="Toggle menu"
+              aria-label={t('landing.toggleMenu')}
             >
               {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -156,12 +165,12 @@ export default function LandingPage() {
               className="lg:hidden bg-bg-main border-b border-border-main overflow-hidden"
             >
               <div className="px-6 py-8 space-y-4">
-                <a href="#pricing" className="block text-lg font-medium text-text-primary" onClick={() => setIsMenuOpen(false)}>Pricing</a>
-                <a href="#faq" className="block text-lg font-medium text-text-primary" onClick={() => setIsMenuOpen(false)}>FAQ</a>
-                <a href="#features" className="block text-lg font-medium text-text-primary" onClick={() => setIsMenuOpen(false)}>Features</a>
+                <a href="#pricing" className="block text-lg font-medium text-text-primary" onClick={() => setIsMenuOpen(false)}>{t('landing.navPricing')}</a>
+                <a href="#faq" className="block text-lg font-medium text-text-primary" onClick={() => setIsMenuOpen(false)}>{t('landing.navFaq')}</a>
+                <a href="#features" className="block text-lg font-medium text-text-primary" onClick={() => setIsMenuOpen(false)}>{t('landing.navFeatures')}</a>
                 <div className="pt-6 border-t border-border-main">
                   <Link to="/register" className="block w-full py-4 bg-accent-primary text-bg-main font-bold rounded-xl text-center">
-                    Get Started
+                    {t('landing.getStarted')}
                   </Link>
                 </div>
               </div>
@@ -177,13 +186,13 @@ export default function LandingPage() {
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-2xl sm:text-3xl font-headline font-bold text-text-primary leading-[1.15] mb-3 tracking-tight"
+              className="text-2xl sm:text-3xl font-headline font-bold text-text-primary leading-[1.15] mb-3 tracking-tight select-none"
             >
-              The proxy network built for the <span className="text-accent-primary text-glow">fearless.</span>
+              {t('landing.heroTitle')} <span className="text-accent-primary text-glow">{t('landing.heroTitleFearless')}</span>
             </motion.h1>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="mb-4">
               <p className="text-sm text-text-secondary leading-snug">
-                Premium proxies with 100+ countries, unlimited bandwidth, and full customization.
+                {t('landing.heroSubtitleShort')}
               </p>
             </motion.div>
             <div className="flex flex-col gap-2 max-w-xs mx-auto">
@@ -191,14 +200,14 @@ export default function LandingPage() {
                 to="/register"
                 className="px-6 py-2.5 text-sm font-bold bg-accent-primary text-bg-main rounded-xl flex items-center justify-center gap-2 hover:brightness-110 transition-all shadow-lg shadow-accent-primary/20"
               >
-                Get Started
+                {t('landing.getStarted')}
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <a
                 href="#pricing"
                 className="px-6 py-2.5 text-sm font-bold bg-bg-panel/50 backdrop-blur border border-border-main text-text-primary rounded-xl hover:bg-bg-panel transition-all text-center"
               >
-                View Pricing
+                {t('landing.viewPricing')}
               </a>
             </div>
           </div>
@@ -238,9 +247,9 @@ export default function LandingPage() {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="text-5xl lg:text-7xl font-headline font-bold text-text-primary leading-[1.1] mb-8 tracking-tight"
+                    className="text-5xl lg:text-7xl font-headline font-bold text-text-primary leading-[1.1] mb-8 tracking-tight select-none"
                   >
-                    The proxy network built for the <span className="text-accent-primary text-glow">fearless.</span>
+                    {t('landing.heroTitle')} <span className="text-accent-primary text-glow">{t('landing.heroTitleFearless')}</span>
                   </motion.h1>
                   <motion.p
                     initial={{ opacity: 0 }}
@@ -248,21 +257,21 @@ export default function LandingPage() {
                     transition={{ delay: 0.4 }}
                     className="text-lg lg:text-xl text-text-secondary mb-12 max-w-2xl leading-relaxed"
                   >
-                    Premium proxies with 100+ countries, unlimited bandwidth, and full customization. Perfect for automation, scraping & multi-account workflows.
+                    {t('landing.heroSubtitle')}
                   </motion.p>
                   <div className="flex flex-wrap gap-4">
                     <Link
                       to="/register"
                       className="px-8 py-4 bg-accent-primary text-bg-main font-bold rounded-xl flex items-center gap-2 hover:brightness-110 transition-all shadow-lg shadow-accent-primary/20"
                     >
-                      Get Started
+                      {t('landing.getStarted')}
                       <ArrowRight className="w-5 h-5" />
                     </Link>
                     <a
                       href="#pricing"
                       className="px-8 py-4 bg-bg-panel/50 backdrop-blur border border-border-main text-text-primary font-bold rounded-xl hover:bg-bg-panel transition-all"
                     >
-                      View Pricing
+                      {t('landing.viewPricing')}
                     </a>
                   </div>
                 </div>
@@ -285,9 +294,9 @@ export default function LandingPage() {
       <section id="features" className="py-24 bg-bg-section-alt">
         <div className="max-w-7xl mx-auto px-6">
           <motion.div {...fadeIn} className="text-center mb-16">
-            <h2 className="text-3xl font-headline font-bold text-text-primary mb-4">Engineered for Stealth</h2>
+            <h2 className="text-3xl font-headline font-bold text-text-primary mb-4">{t('landing.featuresTitle')}</h2>
             <p className="text-text-secondary max-w-2xl mx-auto">
-              Our infrastructure is built on Tier-1 backbone providers ensuring maximum uptime and protocol flexibility.
+              {t('landing.featuresSubtitle')}
             </p>
           </motion.div>
 
@@ -300,33 +309,33 @@ export default function LandingPage() {
           >
             <FeatureCard
               icon={<Globe className="w-6 h-6 md:w-8 md:h-8 text-accent-primary" />}
-              title="Global Residential"
-              description="16M+ real user devices across every major city."
+              title={t('landing.featureGlobalTitle')}
+              description={t('landing.featureGlobalDesc')}
             />
             <FeatureCard
               icon={<Zap className="w-6 h-6 md:w-8 md:h-8 text-accent-violet" />}
-              title="Blazing Fast"
-              description="Response times under 100ms with optimized routing."
+              title={t('landing.featureFastTitle')}
+              description={t('landing.featureFastDesc')}
             />
             <FeatureCard
               icon={<Lock className="w-6 h-6 md:w-8 md:h-8 text-accent-primary" />}
-              title="E2E Encrypted"
-              description="Military-grade encryption for all data transit."
+              title={t('landing.featureEncryptedTitle')}
+              description={t('landing.featureEncryptedDesc')}
             />
             <FeatureCard
               icon={<Coins className="w-6 h-6 md:w-8 md:h-8 text-accent-violet" />}
-              title="Crypto Payments"
-              description="Pay anonymously with BTC, ETH, SOL, or USDC."
+              title={t('landing.featureCryptoTitle')}
+              description={t('landing.featureCryptoDesc')}
             />
             <FeatureCard
               icon={<LayoutDashboard className="w-6 h-6 md:w-8 md:h-8 text-accent-primary" />}
-              title="Live Dashboard"
-              description="Real-time usage tracking and session management."
+              title={t('landing.featureDashboardTitle')}
+              description={t('landing.featureDashboardDesc')}
             />
             <FeatureCard
               icon={<Terminal className="w-6 h-6 md:w-8 md:h-8 text-accent-violet" />}
-              title="Developer API"
-              description="REST API for seamless integration into your stacks."
+              title={t('landing.featureApiTitle')}
+              description={t('landing.featureApiDesc')}
             />
           </motion.div>
         </div>
@@ -337,8 +346,8 @@ export default function LandingPage() {
         <div className="absolute top-0 right-0 w-96 h-96 bg-accent-primary/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2" />
         <div className="max-w-7xl mx-auto px-6 relative z-10">
           <motion.div {...fadeIn} className="mb-16">
-            <span className="font-label text-accent-primary text-xs tracking-widest uppercase mb-4 block">Applications</span>
-            <h2 className="text-4xl font-headline font-bold text-text-primary">Built for real-world applications.</h2>
+            <span className="font-label text-accent-primary text-xs tracking-widest uppercase mb-4 block">{t('landing.applicationsLabel')}</span>
+            <h2 className="text-4xl font-headline font-bold text-text-primary">{t('landing.applicationsTitle')}</h2>
           </motion.div>
 
           <motion.div
@@ -348,12 +357,12 @@ export default function LandingPage() {
             viewport={{ once: true }}
             className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8"
           >
-            <UseCaseCard icon={<Users />} title="Multi-Accounting" description="Manage thousands of accounts without detection." />
-            <UseCaseCard icon={<Search />} title="Web Scraping" description="Extract data at scale with zero rate-limiting." />
-            <UseCaseCard icon={<ShoppingBag />} title="Retail Bots" description="Secure the latest drops with high-speed nodes." />
-            <UseCaseCard icon={<Share2 />} title="Social Media" description="Scale your presence using residential identity." />
-            <UseCaseCard icon={<CheckCircle2 />} title="Ad Verification" description="Verify local ad placements globally with precision." />
-            <UseCaseCard icon={<Bug />} title="Automation" description="Test applications from various geo-locations." />
+            <UseCaseCard icon={<Users />} title={t('landing.useCaseMultiTitle')} description={t('landing.useCaseMultiDesc')} />
+            <UseCaseCard icon={<Search />} title={t('landing.useCaseScrapingTitle')} description={t('landing.useCaseScrapingDesc')} />
+            <UseCaseCard icon={<ShoppingBag />} title={t('landing.useCaseRetailTitle')} description={t('landing.useCaseRetailDesc')} />
+            <UseCaseCard icon={<Share2 />} title={t('landing.useCaseSocialTitle')} description={t('landing.useCaseSocialDesc')} />
+            <UseCaseCard icon={<CheckCircle2 />} title={t('landing.useCaseAdTitle')} description={t('landing.useCaseAdDesc')} />
+            <UseCaseCard icon={<Bug />} title={t('landing.useCaseAutoTitle')} description={t('landing.useCaseAutoDesc')} />
           </motion.div>
         </div>
       </section>
@@ -370,24 +379,24 @@ export default function LandingPage() {
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-accent-primary/5 blur-[120px]" />
             <div className="relative z-10 max-w-3xl mx-auto">
               <h2 className="text-4xl lg:text-6xl font-headline font-bold text-text-primary mb-6 tracking-tight">
-                Ready to disappear?
+                {t('landing.ctaTitle')}
               </h2>
               <p className="text-lg lg:text-xl text-text-secondary mb-12 leading-relaxed">
-                Join thousands of users who trust Void Proxy. Start browsing anonymously in minutes.
+                {t('landing.ctaSubtitle')}
               </p>
               <div className="flex flex-wrap justify-center gap-4">
                 <Link
                   to="/register"
                   className="px-10 py-4 bg-accent-primary text-bg-main font-bold rounded-xl flex items-center gap-2 hover:brightness-110 transition-all shadow-lg shadow-accent-primary/20 group inline-flex"
                 >
-                  Create free account
+                  {t('landing.createFreeAccount')}
                   <ArrowRight className="group-hover:translate-x-1 transition-transform" />
                 </Link>
                 <a
                   href="#pricing"
                   className="px-10 py-4 bg-bg-panel/50 backdrop-blur border border-border-main text-text-primary font-bold rounded-xl hover:bg-bg-panel transition-all inline-flex"
                 >
-                  View Pricing
+                  {t('landing.viewPricing')}
                 </a>
               </div>
             </div>

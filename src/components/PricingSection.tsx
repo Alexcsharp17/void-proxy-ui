@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'motion/react';
 import { Check, Loader2 } from 'lucide-react';
 import { productsApi } from '../api';
@@ -12,13 +13,13 @@ import { calculateBulkDiscount } from '../utils/bulkDiscount';
 
 const BYTES_PER_GB = 1e9;
 
-/** Sample tiers for Volume Discounts (same formula as PurchasePage). */
-const VOLUME_DISCOUNT_SAMPLES: { label: string; gb: number }[] = [
-  { label: '1-249 GB', gb: 100 },
-  { label: '250 GB', gb: 250 },
-  { label: '1,000 GB', gb: 1000 },
-  { label: '2,500 GB', gb: 2500 },
-  { label: '5,000+ GB', gb: 5000 },
+/** Sample tiers for Volume Discounts (labelKey = i18n key under landing.pricing). */
+const VOLUME_DISCOUNT_SAMPLES: { labelKey: string; gb: number }[] = [
+  { labelKey: 'tier1', gb: 100 },
+  { labelKey: 'tier2', gb: 250 },
+  { labelKey: 'tier3', gb: 1000 },
+  { labelKey: 'tier4', gb: 2500 },
+  { labelKey: 'tier5', gb: 5000 },
 ];
 
 const fadeIn = {
@@ -28,17 +29,21 @@ const fadeIn = {
   transition: { duration: 0.6 },
 };
 
-/** Prefer English so landing pricing cards stay in one language. */
-function getLocalized(value: string | { en?: string; ru?: string } | undefined): string {
+/** Pick en/ru from API object based on current language. */
+function getLocalized(
+  value: string | { en?: string; ru?: string } | undefined,
+  lang: string
+): string {
   if (value == null) return '';
   if (typeof value === 'string') return value;
-  return value.en ?? value.ru ?? '';
+  const isRu = lang?.split('-')[0] === 'ru';
+  return isRu ? (value.ru ?? value.en ?? '') : (value.en ?? value.ru ?? '');
 }
 
-function getProductDisplayName(p: Product): string {
+function getProductDisplayName(p: Product, lang: string): string {
   const name = p.displayName ?? p.name;
   if (typeof name === 'string') return name;
-  return getLocalized(name);
+  return getLocalized(name, lang);
 }
 
 function quantityToGb(entry: PricingTableEntry): number {
@@ -62,19 +67,18 @@ function getBulkAttrs(product: Product | null): {
 function computeVolumeDiscountRows(
   gbBaseEntries: PricingTableEntry[],
   product: Product
-): { label: string; pricePerGb: number; savingsPct: number; isHighlight: boolean; isBold: boolean }[] {
+): { labelKey: string; pricePerGb: number; savingsPct: number; isHighlight: boolean; isBold: boolean }[] {
   const valid = gbBaseEntries.filter((e) => quantityToGb(e) > 0 && ((e.basePrice ?? e.totalPrice) ?? 0) > 0);
   const sorted = [...valid].sort((a, b) => quantityToGb(a) - quantityToGb(b));
   if (sorted.length < 2) return [];
   const first = sorted[0];
   const second = sorted[1];
-  // API returns basePrice/totalPrice as price per GB (per unit), not total for quantity — same as PurchasePage
   const starterPricePerGb = first.basePrice ?? first.totalPrice ?? 0;
   const proThresholdGb = quantityToGb(second);
   const proPricePerGb = second.basePrice ?? second.totalPrice ?? 0;
   const attrs = getBulkAttrs(product);
 
-  return VOLUME_DISCOUNT_SAMPLES.map((sample, index) => {
+  return VOLUME_DISCOUNT_SAMPLES.map((sample) => {
     const isHighlight = sample.gb === 250;
     const isBold = sample.gb === 5000;
     let pricePerGb: number;
@@ -94,7 +98,7 @@ function computeVolumeDiscountRows(
     }
 
     return {
-      label: sample.label,
+      labelKey: sample.labelKey,
       pricePerGb,
       savingsPct: Math.round(savingsPct),
       isHighlight,
@@ -121,13 +125,13 @@ function DiscountRow({
   range,
   price,
   highlight,
-  savings,
+  savingsPct,
   bold,
 }: {
   range: string;
   price: string;
   highlight?: boolean;
-  savings?: string;
+  savingsPct?: number;
   bold?: boolean;
 }) {
   return (
@@ -137,10 +141,17 @@ function DiscountRow({
       <span>{range}</span>
       <span>
         {price}
-        {savings && <span className="text-emerald-500 ml-1">(Save {savings})</span>}
+        {savingsPct != null && savingsPct > 0 && (
+          <span className="text-emerald-500 ml-1">(<SavePct pct={savingsPct} />)</span>
+        )}
       </span>
     </div>
   );
+}
+
+function SavePct({ pct }: { pct: number }) {
+  const { t } = useTranslation('app');
+  return <>{t('landing.pricing.save', { pct })}</>;
 }
 
 function PriceTableRow({ period, price, last }: { period: string; price: string; last?: boolean }) {
@@ -160,20 +171,12 @@ interface ProductWithPricing {
   modifiers: PricingModifiersResponse;
 }
 
-const GB_FEATURES = [
-  'Scraping & data extraction',
-  'Smart IP rotation engine',
-  '99.9% Network uptime',
-  'Global Geo-targeting',
-];
-const UNLIMITED_FEATURES = [
-  'Ideal for 24/7 scraping tasks',
-  'SMM & multi-account management',
-  'No data overage charges',
-  'Instant credentials delivery',
-];
+const GB_FEATURE_KEYS = ['gbFeature1', 'gbFeature2', 'gbFeature3', 'gbFeature4'] as const;
+const UNLIMITED_FEATURE_KEYS = ['unlimitedFeature1', 'unlimitedFeature2', 'unlimitedFeature3', 'unlimitedFeature4'] as const;
 
 export function PricingSection() {
+  const { t, i18n } = useTranslation('app');
+  const lang = i18n.language ?? 'en';
   const [gb, setGb] = useState<ProductWithPricing | null>(null);
   const [unlimited, setUnlimited] = useState<ProductWithPricing | null>(null);
   const [loading, setLoading] = useState(true);
@@ -221,7 +224,7 @@ export function PricingSection() {
           setUnlimited(unlimitedData);
         }
       } catch (e: unknown) {
-        if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load');
+        if (!cancelled) setError(e instanceof Error ? e.message : t('landing.pricing.loadingError'));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -229,7 +232,7 @@ export function PricingSection() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t]);
 
   const unlimitedSteps =
     unlimited?.modifiers?.SPEED?.levels?.map((l) => ({ value: l.value, label: l.label })) ?? [];
@@ -274,9 +277,9 @@ export function PricingSection() {
     <section className="py-24 bg-bg-main" id="pricing">
       <div className="max-w-7xl mx-auto px-6">
         <motion.div {...fadeIn} className="text-center mb-16">
-          <h2 className="text-3xl font-headline font-bold text-text-primary mb-4">Flexible Pricing</h2>
+          <h2 className="text-3xl font-headline font-bold text-text-primary mb-4">{t('landing.pricing.title')}</h2>
           <p className="text-text-secondary max-w-2xl mx-auto">
-            Choose the plan that fits your scale. From individual developers to enterprise scrapers.
+            {t('landing.pricing.subtitle')}
           </p>
         </motion.div>
 
@@ -302,28 +305,27 @@ export function PricingSection() {
               >
                 <div className="mb-8 border-b border-border-main pb-6">
                   <h3 className="text-3xl font-bold text-text-primary mb-4">
-                    {getProductDisplayName(gb.product).toUpperCase()}
+                    {getProductDisplayName(gb.product, lang).toUpperCase()}
                   </h3>
                   <p className="text-text-secondary text-sm leading-relaxed">
-                    {getLocalized(gb.product.description) || 'High-performance residential proxies billed per usage.'}
+                    {getLocalized(gb.product.description, lang) || t('landing.pricing.gbDescription')}
                   </p>
                 </div>
 
                 <div className="flex-grow">
                   <ul className="space-y-4 mb-8">
-                    {GB_FEATURES.map((t) => (
-                      <FeatureItem key={t} text={t} />
+                    {GB_FEATURE_KEYS.map((key) => (
+                      <FeatureItem key={key} text={t(`landing.pricing.${key}`)} />
                     ))}
                   </ul>
 
                   <div className="grid grid-cols-1 gap-4 mb-8">
-                    {/* Starter tier - first entry from API */}
                     {gbBaseEntries[0] && (
                       <div className="p-4 rounded-xl bg-bg-panel border border-border-main flex justify-between items-center">
                         <div>
-                          <p className="text-text-primary font-semibold">Starter</p>
+                          <p className="text-text-primary font-semibold">{t('landing.pricing.starter')}</p>
                           <p className="text-xs text-text-secondary">
-                            {getLocalized((gbBaseEntries[0] as any).quantityDisplay)}
+                            {getLocalized((gbBaseEntries[0] as any).quantityDisplay, lang) || t('landing.pricing.starterRange')}
                           </p>
                         </div>
                         <div className="text-right">
@@ -334,14 +336,13 @@ export function PricingSection() {
                       </div>
                     )}
 
-                    {/* Pro tier with Volume Discounts inside */}
                     <div className="p-4 rounded-xl bg-accent-primary/5 border border-accent-primary/30 relative overflow-hidden">
                       {gbBaseEntries[1] ? (
                         <div className="flex justify-between items-center mb-4">
                           <div>
-                            <p className="text-text-primary font-semibold">Pro</p>
+                            <p className="text-text-primary font-semibold">{t('landing.pricing.pro')}</p>
                             <p className="text-xs text-text-secondary">
-                              {getLocalized((gbBaseEntries[1] as any).quantityDisplay)}
+                              {getLocalized((gbBaseEntries[1] as any).quantityDisplay, lang) || t('landing.pricing.proRange')}
                             </p>
                           </div>
                           <div className="text-right">
@@ -353,8 +354,8 @@ export function PricingSection() {
                       ) : (
                         <div className="flex justify-between items-center mb-4">
                           <div>
-                            <p className="text-text-primary font-semibold">Pro</p>
-                            <p className="text-xs text-text-secondary">250+ GB</p>
+                            <p className="text-text-primary font-semibold">{t('landing.pricing.pro')}</p>
+                            <p className="text-xs text-text-secondary">{t('landing.pricing.proRange')}</p>
                           </div>
                           <div className="text-right">
                             <span className="text-xl font-bold text-accent-primary">$0.28</span>
@@ -364,36 +365,36 @@ export function PricingSection() {
                       )}
                       <div className="mt-4 pt-4 border-t border-accent-primary/20">
                         <p className="text-xs font-bold text-accent-primary uppercase tracking-widest mb-2">
-                          Volume Discounts
+                          {t('landing.pricing.volumeDiscounts')}
                         </p>
                         <p className="text-sm text-text-secondary mb-4">
-                          Buy more, pay less. Up to 30% off at 5,000+ GB.
+                          {t('landing.pricing.volumeDiscountsDesc')}
                         </p>
                         <div className="space-y-2">
                           {volumeDiscountRows.length > 0 ? (
                             volumeDiscountRows.map((row) => {
-                              const exactTier = row.label === '1-249 GB' || row.label === '250 GB' || row.label === '5,000+ GB';
+                              const exactTier = row.labelKey === 'tier1' || row.labelKey === 'tier2' || row.labelKey === 'tier5';
                               const priceStr = exactTier
                                 ? `$${row.pricePerGb.toFixed(2)}/GB`
                                 : `~$${row.pricePerGb.toFixed(2)}/GB`;
                               return (
                                 <DiscountRow
-                                  key={row.label}
-                                  range={row.label}
+                                  key={row.labelKey}
+                                  range={t(`landing.pricing.${row.labelKey}`)}
                                   price={priceStr}
                                   highlight={row.isHighlight}
-                                  savings={row.savingsPct > 0 ? `${row.savingsPct}%` : undefined}
+                                  savingsPct={row.savingsPct > 0 ? row.savingsPct : undefined}
                                   bold={row.isBold}
                                 />
                               );
                             })
                           ) : (
                             <>
-                              <DiscountRow range="1-249 GB" price="$0.30/GB" />
-                              <DiscountRow range="250 GB" price="~$0.28/GB" highlight savings="7%" />
-                              <DiscountRow range="1,000 GB" price="~$0.25/GB" savings="17%" />
-                              <DiscountRow range="2,500 GB" price="~$0.23/GB" savings="24%" />
-                              <DiscountRow range="5,000+ GB" price="$0.21/GB" savings="30%" bold />
+                              <DiscountRow range={t('landing.pricing.tier1')} price="$0.30/GB" />
+                              <DiscountRow range={t('landing.pricing.tier2')} price="~$0.28/GB" highlight savingsPct={7} />
+                              <DiscountRow range={t('landing.pricing.tier3')} price="~$0.25/GB" savingsPct={17} />
+                              <DiscountRow range={t('landing.pricing.tier4')} price="~$0.23/GB" savingsPct={24} />
+                              <DiscountRow range={t('landing.pricing.tier5')} price="$0.21/GB" savingsPct={30} bold />
                             </>
                           )}
                         </div>
@@ -406,12 +407,11 @@ export function PricingSection() {
                   to="/login"
                   className="w-full py-4 bg-accent-primary text-bg-main font-bold rounded-xl transition-all duration-200 uppercase tracking-widest text-sm shadow-lg shadow-accent-primary/20 hover:brightness-110 text-center"
                 >
-                  Purchase
+                  {t('landing.pricing.purchase')}
                 </Link>
               </motion.div>
             )}
 
-            {/* Unlimited Proxies Card */}
             {unlimited && (
               <motion.div
                 {...fadeIn}
@@ -419,18 +419,18 @@ export function PricingSection() {
               >
                 <div className="mb-8 border-b border-border-main pb-6">
                   <h3 className="text-3xl font-bold text-text-primary mb-4">
-                    {getProductDisplayName(unlimited.product).toUpperCase()}
+                    {getProductDisplayName(unlimited.product, lang).toUpperCase()}
                   </h3>
                   <p className="text-text-secondary text-sm leading-relaxed">
-                    {getLocalized(unlimited.product.description) ||
-                      'Zero traffic limits for high-volume automated operations.'}
+                    {getLocalized(unlimited.product.description, lang) ||
+                      t('landing.pricing.unlimitedDescription')}
                   </p>
                 </div>
 
                 <div className="flex-grow">
                   <ul className="space-y-4 mb-8">
-                    {UNLIMITED_FEATURES.map((t) => (
-                      <FeatureItem key={t} text={t} />
+                    {UNLIMITED_FEATURE_KEYS.map((key) => (
+                      <FeatureItem key={key} text={t(`landing.pricing.${key}`)} />
                     ))}
                   </ul>
 
@@ -438,11 +438,12 @@ export function PricingSection() {
                     <div className="mb-8 p-6 rounded-xl bg-bg-panel/50 border border-border-main">
                       <div className="flex justify-between items-center mb-6">
                         <label className="text-xs font-bold text-text-secondary uppercase tracking-widest">
-                          Select Bandwidth
+                          {t('landing.pricing.selectBandwidth')}
                         </label>
                         <span className="text-accent-primary font-mono font-bold text-lg">
                           {getLocalized(
-                            (currentUnlimitedStep as { label?: string | { en?: string; ru?: string } })?.label
+                            (currentUnlimitedStep as { label?: string | { en?: string; ru?: string } })?.label,
+                            lang
                           )}
                         </span>
                       </div>
@@ -534,7 +535,7 @@ export function PricingSection() {
                             }`}
                             onClick={() => handleUnlimitedStepClick(idx)}
                           >
-                            {getLocalized((step as { label?: string | { en?: string; ru?: string } }).label).toUpperCase()}
+                            {getLocalized((step as { label?: string | { en?: string; ru?: string } }).label, lang).toUpperCase()}
                           </button>
                         ))}
                       </div>
@@ -545,17 +546,17 @@ export function PricingSection() {
                     <table className="w-full text-left border-collapse">
                       <thead className="bg-bg-panel text-[10px] uppercase text-text-secondary font-bold">
                         <tr>
-                          <th className="p-3 border-b border-border-main">Period</th>
-                          <th className="p-3 border-b border-border-main text-right">Price</th>
+                          <th className="p-3 border-b border-border-main">{t('landing.pricing.period')}</th>
+                          <th className="p-3 border-b border-border-main text-right">{t('landing.pricing.price')}</th>
                         </tr>
                       </thead>
                       <tbody className="text-sm text-text-secondary">
                         {unlimitedEntriesForStep.map((entry, i) => (
                           <PriceTableRow
-                            key={`${getLocalized((entry as any).packageDisplayName)}-${i}`}
+                            key={`${getLocalized((entry as any).packageDisplayName, lang)}-${i}`}
                             period={
-                              getLocalized((entry as any).packageDisplayName) ||
-                              getLocalized((entry as any).quantityDisplay)
+                              getLocalized((entry as any).packageDisplayName, lang) ||
+                              getLocalized((entry as any).quantityDisplay, lang)
                             }
                             price={formatPrice(entry.totalPrice)}
                             last={i === unlimitedEntriesForStep.length - 1}
@@ -570,7 +571,7 @@ export function PricingSection() {
                   to="/login"
                   className="w-full py-4 border border-accent-primary/50 text-accent-primary hover:bg-accent-primary hover:text-bg-main font-bold rounded-xl transition-all duration-200 uppercase tracking-widest text-sm text-center"
                 >
-                  Purchase
+                  {t('landing.pricing.purchase')}
                 </Link>
               </motion.div>
             )}
@@ -578,7 +579,7 @@ export function PricingSection() {
         )}
 
         {!loading && !error && !gb && !unlimited && (
-          <p className="text-center text-text-secondary py-12">No plans available at the moment.</p>
+          <p className="text-center text-text-secondary py-12">{t('landing.pricing.noPlans')}</p>
         )}
       </div>
     </section>

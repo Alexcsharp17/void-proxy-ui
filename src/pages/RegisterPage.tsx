@@ -6,6 +6,7 @@ import { authApi, setApiToken } from '../api';
 import TurnstileWidget from '../components/TurnstileWidget';
 import SuccessRegistrationModal from '../components/SuccessRegistrationModal';
 import { isTurnstileDisabled } from '../utils/turnstile';
+import { getReferralFromCookie } from '../utils/referralCookie';
 
 export default function RegisterPage() {
   const { t } = useTranslation('auth');
@@ -28,8 +29,13 @@ export default function RegisterPage() {
   const [captchaPassed, setCaptchaPassed] = useState(false);
 
   useEffect(() => {
-    const ref = searchParams.get('ref');
-    if (ref) setReferralCode(ref);
+    const refFromUrl = searchParams.get('ref');
+    if (refFromUrl) {
+      setReferralCode(refFromUrl);
+      return;
+    }
+    const cookieRef = getReferralFromCookie();
+    if (cookieRef) setReferralCode(cookieRef);
   }, [searchParams]);
 
   useEffect(() => {

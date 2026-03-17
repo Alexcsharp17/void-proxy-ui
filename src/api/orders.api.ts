@@ -12,6 +12,7 @@ export interface CreateOrderBody {
 }
 
 export interface SubCredentialRow {
+  id: number;
   proxyId: string;
   credentialsString: string | null;
   createdAt: string;
@@ -47,6 +48,18 @@ export const ordersApi = {
       { count }
     );
     return res.data ?? { success: false, credentials: [] };
+  },
+
+  /** Apply settings / save list: updates visible sub-credentials; shorter list hides the rest. */
+  applySubCredentialsSettings: async (
+    orderId: number,
+    credentials: string[]
+  ): Promise<{ success: boolean }> => {
+    const res = await api.post<{ success: boolean }>(
+      `/orders/${orderId}/sub-credentials/apply-settings`,
+      { credentials }
+    );
+    return res.data ?? { success: false };
   },
 
   updateOrder: async (

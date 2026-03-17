@@ -63,4 +63,10 @@ export const userApi = {
     const res = await api.post<{ success: boolean; secret: string; message: string }>('/user/reseller/regenerate-webhook-secret', {});
     return res.data;
   },
+
+  /** Мягкое удаление аккаунта текущего пользователя (isDeleted = true). */
+  deleteAccount: async (): Promise<{ success: boolean; message: string }> => {
+    const res = await api.post<{ success: boolean; message: string }>('/user/delete-account', {});
+    return res.data;
+  },
 };

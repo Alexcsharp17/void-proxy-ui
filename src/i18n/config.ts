@@ -62,7 +62,7 @@ function detectLanguage(): string {
 
 export function initI18n() {
   const lng = detectLanguage();
-  i18n.use(initReactI18next).init({
+  return i18n.use(initReactI18next).init({
     resources: {
       en: {
         common: commonEn as Record<string, unknown>,
@@ -123,12 +123,11 @@ export function initI18n() {
       useSuspense: false,
     },
   });
-  return i18n;
 }
 
-export function updateLanguage(language: 'en' | 'ru') {
-  i18n.changeLanguage(language);
+export async function updateLanguage(language: 'en' | 'ru') {
   localStorage.setItem('i18nextLng', language);
+  await i18n.changeLanguage(language);
 }
 
 export default i18n;

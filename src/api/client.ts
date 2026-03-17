@@ -6,11 +6,12 @@
  */
 import axios from 'axios';
 
-// Same as old UI: use VITE_API_BASE_URL from env, fallback to localhost for dev
+// Local dev: always use local API. Prod: use VITE_API_BASE_URL from env.
+const LOCAL_API = 'http://localhost:3000/api/v2';
 const raw = typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL
   ? String(import.meta.env.VITE_API_BASE_URL).replace(/\/$/, '')
   : '';
-const BASE_URL = raw || 'http://localhost:3000/api/v2';
+const BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env?.DEV) ? LOCAL_API : (raw || LOCAL_API);
 
 let apiToken: string | null = null;
 let onUnauthorized: (() => void) | null = null;

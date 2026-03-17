@@ -3,15 +3,29 @@ import { useTranslation } from 'react-i18next';
 import { Globe, Moon, Sun, CheckCircle2, Trash2 } from 'lucide-react';
 import CustomSelect from './CustomSelect';
 import { useAuth } from '../contexts/AuthContext';
+import { userApi } from '../api';
 
 const SettingsPage = ({ theme, setTheme }: { theme: 'light' | 'dark', setTheme: (t: 'light' | 'dark') => void }) => {
   const { t } = useTranslation('app');
   const [language, setLanguage] = useState('English');
-  const { user } = useAuth();
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const { user, logout } = useAuth();
 
   const email = user?.email && !String(user.email).startsWith('telegram_') ? user.email : null;
   const isEmailVerified = user?.isEmailVerified ?? false;
   const hasTelegram = Boolean(user?.telegramId);
+
+  const handleDeleteAccount = async () => {
+    if (!window.confirm(t('settings.deleteAccountConfirm'))) return;
+    setDeleteLoading(true);
+    try {
+      await userApi.deleteAccount();
+      await logout();
+      window.location.href = '/';
+    } catch {
+      setDeleteLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -103,8 +117,13 @@ const SettingsPage = ({ theme, setTheme }: { theme: 'light' | 'dark', setTheme: 
                 <p className="text-xs font-bold text-text-primary">{t('settings.deleteAccount')}</p>
                 <p className="text-[10px] text-text-secondary mt-1">{t('settings.deleteAccountDesc')}</p>
               </div>
-              <button className="px-6 py-3 bg-red-400 text-bg-main rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-red-500 transition-all">
-                {t('settings.deleteAccount')}
+              <button
+                type="button"
+                onClick={handleDeleteAccount}
+                disabled={deleteLoading}
+                className="px-6 py-3 bg-red-400 text-bg-main rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-red-500 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {deleteLoading ? t('common.loading') ?? '...' : t('settings.deleteAccount')}
               </button>
             </div>
           </div>

@@ -20,6 +20,7 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
 import ProxiesPage from './pages/ProxiesPage';
 import RootRoute from './pages/RootRoute';
+import ReferralRefSync from './components/ReferralRefSync';
 import PrivacyPage from './pages/PrivacyPage';
 import TermsPage from './pages/TermsPage';
 import CookiesPage from './pages/CookiesPage';
@@ -27,16 +28,19 @@ import NotFoundPage from './pages/NotFoundPage';
 import App from './App.tsx';
 import './index.css';
 
-initI18n();
 runEnvValidation();
 
-createRoot(document.getElementById('root')!).render(
+async function bootstrap() {
+  await initI18n();
+  const root = createRoot(document.getElementById('root')!);
+  root.render(
   <StrictMode>
     <ErrorBoundary>
       <ApiUrlBanner />
       <Provider store={store}>
         <ThemeSync />
         <BrowserRouter>
+          <ReferralRefSync />
           <AuthProviderWithRedirect>
             <Routes>
             <Route path="/login" element={<LoginPage />} />
@@ -56,4 +60,7 @@ createRoot(document.getElementById('root')!).render(
       </Provider>
     </ErrorBoundary>
   </StrictMode>,
-);
+  );
+}
+
+bootstrap();
