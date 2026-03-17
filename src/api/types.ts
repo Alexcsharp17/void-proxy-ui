@@ -22,6 +22,8 @@ export interface User {
   language?: 'en' | 'ru';
   resellerWebhookUrl?: string | null;
   resellerWebhookSecret?: string | null;
+  hasSpeedBoost?: boolean;
+  userRank?: 'USER' | 'AFFILIATE' | 'AFFILIATE_PRO' | 'RESELLER';
 }
 
 export interface AuthResponse {

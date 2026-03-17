@@ -28,6 +28,9 @@ const CITIES = [
 
 const NODES = ['RESIDENTIAL', 'DATACENTER', 'ISP', 'MOBILE'];
 
+const MAX_LOGS = 4;
+const ROW_HEIGHT = 28;
+
 export const LiveRequests: React.FC = () => {
   const [logs, setLogs] = useState<RequestLog[]>([]);
 
@@ -51,7 +54,7 @@ export const LiveRequests: React.FC = () => {
         }),
       };
 
-      setLogs((prev) => [newLog, ...prev].slice(0, 4));
+      setLogs((prev) => [...prev, newLog].slice(-MAX_LOGS));
     };
 
     const interval = setInterval(generateLog, 2000);
@@ -61,26 +64,40 @@ export const LiveRequests: React.FC = () => {
   }, []);
 
   return (
-    <div className="space-y-2 font-label text-[10px] md:text-[12px] leading-tight border-t border-border-main pt-6 min-h-[100px]">
-      {logs.map((log) => (
-        <div
-          key={log.id}
-          className="flex justify-between text-text-secondary animate-in fade-in slide-in-from-left-2 duration-500"
-        >
-          <div className="flex gap-2 md:gap-4 overflow-hidden">
-            <span className="text-accent-primary shrink-0">[LIVE]</span>
-            <span className="text-[9px] md:text-[10px] opacity-40 shrink-0">{log.timestamp}</span>
-            <span className="font-mono tracking-wider truncate">
-              <span className="text-accent-violet">{log.node}</span>
-            </span>
-          </div>
-          <span
-            className={`${log.latency > 100 ? 'text-red-400' : 'text-accent-violet'} font-mono shrink-0 ml-2`}
-          >
-            {log.latency}ms
-          </span>
-        </div>
-      ))}
+    <div
+      className="font-label text-[10px] md:text-[12px] leading-tight border-t border-border-main pt-6"
+      style={{ minHeight: MAX_LOGS * ROW_HEIGHT + 24 }}
+    >
+      <div className="space-y-2" style={{ minHeight: MAX_LOGS * ROW_HEIGHT }}>
+        {logs.map((log, index) => {
+          const opacities = [0.5, 0.7, 0.85, 1];
+          const opacity = opacities[index] ?? 0.5;
+          return (
+            <div
+              key={log.id}
+              className="flex justify-between text-text-secondary transition-opacity duration-300 ease-out"
+              style={{
+                opacity,
+                height: ROW_HEIGHT,
+                minHeight: ROW_HEIGHT,
+              }}
+            >
+              <div className="flex gap-2 md:gap-4 overflow-hidden min-w-0">
+                <span className="text-accent-primary shrink-0">[LIVE]</span>
+                <span className="text-[9px] md:text-[10px] opacity-70 shrink-0">{log.timestamp}</span>
+                <span className="font-mono tracking-wider truncate">
+                  <span className="text-accent-violet">{log.node}</span>
+                </span>
+              </div>
+              <span
+                className={`${log.latency > 100 ? 'text-red-400' : 'text-accent-violet'} font-mono shrink-0 ml-2`}
+              >
+                {log.latency}ms
+              </span>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };

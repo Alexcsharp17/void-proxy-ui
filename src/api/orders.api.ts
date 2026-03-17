@@ -1,6 +1,16 @@
 import { api } from './client';
 import type { Order } from './types';
 
+export interface CreateOrderBody {
+  serviceType: number | string;
+  productId: number;
+  quantity: number;
+  price: number;
+  targets?: string[];
+  modificatorsSelection?: Record<string, number>;
+  promoCode?: string;
+}
+
 export interface SubCredentialRow {
   proxyId: string;
   credentialsString: string | null;
@@ -44,6 +54,19 @@ export const ordersApi = {
     data: { autoRefill?: boolean; autoRefillAmountGb?: number | null }
   ): Promise<Order> => {
     const res = await api.put<Order>(`/orders/${orderId}`, data);
+    return res.data;
+  },
+
+  createOrder: async (body: CreateOrderBody): Promise<Order> => {
+    const res = await api.post<Order>('/add', {
+      serviceType: body.serviceType,
+      productId: body.productId,
+      quantity: body.quantity,
+      price: body.price,
+      targets: body.targets ?? [],
+      ...(body.modificatorsSelection && { modificatorsSelection: body.modificatorsSelection }),
+      ...(body.promoCode && { promoCode: body.promoCode }),
+    });
     return res.data;
   },
 };

@@ -208,6 +208,14 @@ export default function LandingPage() {
             animate={{ opacity: 1, y: 0 }}
             className="glass-card rounded-2xl overflow-hidden border border-border-main shadow-2xl relative min-h-[320px] sm:min-h-[380px] lg:min-h-[700px] flex flex-col bg-bg-main"
           >
+            {/* Background: Earth/space image (public/earth-bg.jpg), desktop only */}
+            <div className="absolute inset-0 z-0 overflow-hidden rounded-2xl hidden lg:block">
+              <img
+                src="/earth-bg.jpg"
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover object-center opacity-50"
+              />
+            </div>
             <div className="scanline absolute inset-0 z-10 pointer-events-none" />
             <div className="relative z-20 p-3 sm:p-4 md:p-8 flex flex-col h-full flex-grow">
               {/* Console Header */}

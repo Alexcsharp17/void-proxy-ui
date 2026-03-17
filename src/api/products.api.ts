@@ -30,4 +30,12 @@ export const productsApi = {
     const res = await api.get<PricingModifiersResponse>('/products/pricing-modifiers', { params });
     return res.data;
   },
+
+  /** AddOns products (serviceType 20) for Add-ons page. */
+  async getAddonProducts(): Promise<Product[]> {
+    const res = await api.get<Product[]>('/products/by-service-type/20');
+    const data = res.data;
+    if (!Array.isArray(data)) return [];
+    return data.filter((p) => p && (p as Product).isActive !== false);
+  },
 };

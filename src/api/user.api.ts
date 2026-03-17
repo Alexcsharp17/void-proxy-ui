@@ -1,6 +1,13 @@
 import { api } from './client';
 import type { User, BalanceResponse } from './types';
 
+export interface ReferralTierRow {
+  tierName: string;
+  emoji: string;
+  percent: number;
+  nextAt: number | null;
+}
+
 export interface ReferralStats {
   totalReferrals: number;
   totalEarnings: number;
@@ -10,6 +17,10 @@ export interface ReferralStats {
   referralLevel: string;
   userRank: string;
   currentTierLabel: string;
+  tierName?: string;
+  tierEmoji?: string;
+  nextTierAt?: number | null;
+  tiersLadder?: ReferralTierRow[];
 }
 
 export const userApi = {
@@ -30,7 +41,7 @@ export const userApi = {
 
   getReferralStats: async (): Promise<ReferralStats> => {
     const res = await api.get<ReferralStats>('/referral/stats');
-    return res.data ?? { totalReferrals: 0, totalEarnings: 0, totalReferralVolume: 0, commissionRate: 0, referralCode: '', referralLevel: '', userRank: 'USER', currentTierLabel: '' };
+    return res.data ?? { totalReferrals: 0, totalEarnings: 0, totalReferralVolume: 0, commissionRate: 0, referralCode: '', referralLevel: '', userRank: 'USER', currentTierLabel: '', tierName: 'Bronze', tierEmoji: '🥉', nextTierAt: 500, tiersLadder: [] };
   },
 
   getReferrals: async (): Promise<unknown[]> => {
