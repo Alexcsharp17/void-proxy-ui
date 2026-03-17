@@ -3,6 +3,7 @@
 interface ImportMetaEnv {
   readonly VITE_API_BASE_URL?: string;
   readonly VITE_APP_URL?: string;
+  readonly VITE_UI_BASE_URL?: string;
   readonly VITE_TURNSTILE_SITE_KEY?: string;
   readonly VITE_DISABLE_TURNSTILE?: string;
   readonly VITE_TELEGRAM_BOT_USERNAME?: string;

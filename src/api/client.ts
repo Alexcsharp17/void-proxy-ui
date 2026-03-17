@@ -1,12 +1,16 @@
 /**
  * Axios API client for SSPanel. Token is set by AuthContext; 401 triggers onUnauthorized callback.
+ *
+ * Same env as old UI: set VITE_API_BASE_URL to the full API base (e.g. https://void-panel.com/api/v2).
+ * Fallback to localhost only when not set (for local dev).
  */
 import axios from 'axios';
 
-const BASE_URL =
-  typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL
-    ? String(import.meta.env.VITE_API_BASE_URL).replace(/\/$/, '')
-    : 'http://localhost:3000/api/v2';
+// Same as old UI: use VITE_API_BASE_URL from env, fallback to localhost for dev
+const raw = typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL
+  ? String(import.meta.env.VITE_API_BASE_URL).replace(/\/$/, '')
+  : '';
+const BASE_URL = raw || 'http://localhost:3000/api/v2';
 
 let apiToken: string | null = null;
 let onUnauthorized: (() => void) | null = null;

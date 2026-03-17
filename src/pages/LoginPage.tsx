@@ -42,9 +42,13 @@ export default function LoginPage() {
           navigate(redirectTo, { replace: true });
         } else {
           setError(t('login.invalidToken'));
+          setTurnstileToken(null);
+          setCaptchaPassed(false);
         }
       } catch {
         setError(t('login.loginFailed'));
+        setTurnstileToken(null);
+        setCaptchaPassed(false);
       } finally {
         setLoading(false);
       }
@@ -105,12 +109,15 @@ export default function LoginPage() {
             </label>
             <input
               id="apiKey"
+              name="apiKey"
               type="password"
               autoComplete="off"
               placeholder={t('login.enterToken')}
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               className="w-full rounded-lg bg-bg-input border border-border-main text-text-primary px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-accent-primary/50 placeholder:text-text-muted"
+              data-lpignore="true"
+              data-form-type="other"
             />
           </div>
 
@@ -120,9 +127,8 @@ export default function LoginPage() {
             <span className="flex-1 h-px bg-border-main" aria-hidden />
           </div>
 
-          {!useApiKeyMode && (
-            <>
-              <div>
+          <div style={{ display: useApiKeyMode ? 'none' : undefined }}>
+            <div>
                 <label
                   htmlFor="email"
                   className="block text-sm font-medium text-text-secondary mb-1"
@@ -175,24 +181,26 @@ export default function LoginPage() {
                   </button>
                 </div>
               </div>
-            </>
-          )}
+          </div>
 
-          {!useApiKeyMode && (
-            <TurnstileWidget
-              onSuccess={(token) => {
-                setTurnstileToken(token);
-                setCaptchaPassed(true);
-              }}
-              onError={() => {
-                setTurnstileToken(null);
-                setCaptchaPassed(false);
-              }}
-              onExpire={() => {
-                setTurnstileToken(null);
-                setCaptchaPassed(false);
-              }}
-            />
+          {!isTurnstileDisabled() && (
+            <div style={{ display: captchaPassed ? 'none' : undefined }}>
+              <TurnstileWidget
+                key={turnstileToken ?? 'unsolved'}
+                onSuccess={(token) => {
+                  setTurnstileToken(token);
+                  setCaptchaPassed(true);
+                }}
+                onError={() => {
+                  setTurnstileToken(null);
+                  setCaptchaPassed(false);
+                }}
+                onExpire={() => {
+                  setTurnstileToken(null);
+                  setCaptchaPassed(false);
+                }}
+              />
+            </div>
           )}
 
           <button
@@ -207,7 +215,7 @@ export default function LoginPage() {
           </button>
 
           {(typeof (import.meta as any).env?.VITE_TELEGRAM_BOT_USERNAME === 'string' || typeof (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID === 'string') && (
-            <>
+            <div style={{ display: useApiKeyMode ? 'none' : undefined }} aria-hidden={useApiKeyMode}>
               <div className="flex items-center gap-3">
                 <span className="flex-1 h-px bg-border-main" aria-hidden />
                 <span className="text-xs font-medium text-text-muted uppercase tracking-wider">{t('login.or')}</span>
@@ -215,7 +223,7 @@ export default function LoginPage() {
               </div>
               <p className="text-center text-xs text-text-muted mb-2">{t('login.orLoginWith')}</p>
               <SocialLoginButtons onError={setError} />
-            </>
+            </div>
           )}
         </form>
 
