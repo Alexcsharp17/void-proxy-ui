@@ -142,7 +142,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full rounded-lg bg-bg-input border border-border-main text-text-primary px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-accent-primary/50"
-                  required
+                  required={!useApiKeyMode}
                 />
               </div>
               <div>
@@ -160,7 +160,7 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full rounded-lg bg-bg-input border border-border-main text-text-primary px-4 py-2.5 pr-10 focus:outline-none focus:ring-2 focus:ring-accent-primary/50"
-                    required
+                    required={!useApiKeyMode}
                   />
                   <button
                     type="button"
