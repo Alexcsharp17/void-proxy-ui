@@ -241,8 +241,8 @@ const ResellingPage = () => {
   }
 
   const discountPercent = stats?.discountPercent ?? 0;
-  const tierNames = [t('reselling.tierBronze'), t('reselling.tierSilver'), t('reselling.tierGold')];
-  const currentTierName = discountPercent >= 50 ? tierNames[2] : discountPercent >= 40 ? tierNames[1] : tierNames[0];
+  const tierNames = [t('reselling.tierBronze'), t('reselling.tierSilver'), t('reselling.tierGold'), t('reselling.tierPlatinum')];
+  const currentTierName = discountPercent >= 50 ? tierNames[3] : discountPercent >= 40 ? tierNames[2] : discountPercent >= 30 ? tierNames[1] : tierNames[0];
   const isAdminOrReseller = user?.role === 'ADMIN' || user?.role === 'RESELLER';
   const docsUrl = `${BASE_URL.replace(/\/$/, '')}/docs/reseller/`;
 

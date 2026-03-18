@@ -252,6 +252,7 @@
     "tierBronze": "Bronze",
     "tierSilver": "Silver",
     "tierGold": "Gold",
+    "tierPlatinum": "Platinum",
     "apiKeyRegenerated": "API key regenerated successfully",
     "webhookUrlUpdated": "Webhook URL updated successfully",
     "webhookSecretRegenerated": "Webhook secret regenerated successfully",

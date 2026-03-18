@@ -254,6 +254,7 @@
     "tierBronze": "Бронза",
     "tierSilver": "Серебро",
     "tierGold": "Золото",
+    "tierPlatinum": "Платина",
     "apiKeyRegenerated": "API-ключ успешно регенерирован",
     "webhookUrlUpdated": "URL webhook обновлён",
     "webhookSecretRegenerated": "Секрет webhook регенерирован",

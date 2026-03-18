@@ -12,7 +12,7 @@ function buildReferralLink(code: string): string {
 }
 
 /** Volume tiers (USD) — must match API commissionTiers. Used to show "next tier at $X" on UI. */
-const COMMISSION_VOLUME_TIERS = [0, 500, 2000, 10000];
+const COMMISSION_VOLUME_TIERS = [0, 500, 2000, 5000];
 
 function getNextTierMinVolume(volumeUsd: number): number | null {
   for (const tier of COMMISSION_VOLUME_TIERS) {
@@ -25,8 +25,7 @@ const REFERRAL_LEVELS = [
   { emoji: '🥉', name: 'Bronze', percent: 5 },
   { emoji: '🥈', name: 'Silver', percent: 10 },
   { emoji: '🥇', name: 'Gold', percent: 20 },
-  { emoji: '💎', name: 'Diamond', percent: 30 },
-  { emoji: '👑', name: 'Platinum', percent: 40 },
+  { emoji: '👑', name: 'Platinum', percent: 30 },
 ];
 
 const AffiliatePage = () => {
