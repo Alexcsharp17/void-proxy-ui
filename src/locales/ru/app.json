@@ -87,6 +87,7 @@
     "unlimitedProxies": "Безлимитные прокси",
     "quickSelection": "Быстрый выбор",
     "saveUpTo": "Экономия до 15%",
+    "saveUpToDynamic": "Экономия до {{pct}}%",
     "popular": "ПОПУЛЯРНЫЙ",
     "select": "ВЫБРАТЬ",
     "selected": "ВЫБРАНО",

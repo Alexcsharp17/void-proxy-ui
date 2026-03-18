@@ -85,6 +85,7 @@
     "unlimitedProxies": "Unlimited Proxies",
     "quickSelection": "Quick Selection",
     "saveUpTo": "Save up to 15%",
+    "saveUpToDynamic": "Save up to {{pct}}%",
     "popular": "POPULAR",
     "select": "SELECT",
     "selected": "SELECTED",

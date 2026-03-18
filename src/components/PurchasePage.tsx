@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 import { useTranslation } from 'react-i18next';
-import { Package, Sliders, RefreshCw, ArrowRight, Info, Pencil, Gauge, Zap, Rocket } from 'lucide-react';
-import { setPurchaseSegment } from '../store/slices/appSlice';
-import { productsApi, promoApi } from '../api';
+import { Package, Sliders, RefreshCw, ArrowRight, Info, Pencil, Gauge, Zap, Rocket, Loader2 } from 'lucide-react';
+import { setPurchaseSegment, setActivePage } from '../store/slices/appSlice';
+import { productsApi, promoApi, ordersApi } from '../api';
 import type { Product, PricingTableEntry, PricingTableResponse, PricingModifiersResponse } from '../api/types';
 import type { PromoCodeDto } from '../api/promo.api';
 import { calculateBulkDiscount } from '../utils/bulkDiscount';
@@ -12,38 +12,31 @@ const BYTES_PER_GB = 1e9;
 const DEFAULT_SLIDER_MIN = 1;
 const DEFAULT_SLIDER_MAX = 10000;
 
-/** Supplementary (quick-option) packages not from API — fixed labels and prices. */
-const SUPPLEMENTARY_PACKAGES = [
-  { labelKey: 'purchase.supplementaryTrial', gb: 10, totalPrice: 3 },
-  { labelKey: 'purchase.supplementaryStarter', gb: 50, totalPrice: 15 },
-  { labelKey: 'purchase.supplementaryProfessional', gb: 100, totalPrice: 30 },
-  { labelKey: 'purchase.supplementaryBusiness', gb: 250, totalPrice: 75 },
-  { labelKey: 'purchase.supplementaryEnterprise', gb: 500, totalPrice: 147.63 },
+/** Quick-option package definitions (GB amounts + labels). Prices computed dynamically from product. */
+const QUICK_OPTION_DEFS = [
+  { labelKey: 'purchase.supplementaryTrial', gb: 10 },
+  { labelKey: 'purchase.supplementaryStarter', gb: 50 },
+  { labelKey: 'purchase.supplementaryProfessional', gb: 100 },
+  { labelKey: 'purchase.supplementaryBusiness', gb: 250 },
+  { labelKey: 'purchase.supplementaryEnterprise', gb: 500 },
 ] as const;
 
-/** Build quick packages from pricing table (base entries only, no modifier). */
-function buildQuickPackagesFromTable(
-  table: PricingTableEntry[],
-  productId: number | string
-): { gb: number; pricePerGb: number; popular: boolean; entry: PricingTableEntry }[] {
-  const baseEntries = table.filter(
-    (e) => e.productId === Number(productId) && !e.modifierTier && !e.modifier
-  );
-  if (baseEntries.length === 0) return [];
-
-  const out: { gb: number; pricePerGb: number; popular: boolean; entry: PricingTableEntry }[] = [];
-  for (let i = 0; i < Math.min(5, baseEntries.length); i++) {
-    const e = baseEntries[i];
-    const gb = e.quantity >= 1e6 ? e.quantity / BYTES_PER_GB : e.quantity;
-    const pricePerGb = e.basePrice ?? e.totalPrice ?? 0;
-    out.push({
-      gb: Math.round(gb),
-      pricePerGb,
-      popular: i === 1,
-      entry: e,
-    });
-  }
-  return out;
+/** Compute price for a given GB amount using tier + bulk discount logic. */
+function computePriceForGb(
+  gb: number,
+  tableEntries: PricingTableEntry[],
+  product: Product
+): { totalPrice: number; pricePerGb: number } | null {
+  const tier = findTierForGb(tableEntries, gb, product.id);
+  if (!tier || tier.basePrice <= 0) return null;
+  const attrs = getBulkAttrs(product);
+  const bulk = calculateBulkDiscount({
+    selectedGB: gb,
+    lastPackageMinGB: tier.lastPackageMinGB,
+    basePrice: tier.basePrice,
+    ...attrs,
+  });
+  return { totalPrice: bulk.totalCost, pricePerGb: bulk.pricePerGBWithDiscount };
 }
 
 /** Find best matching tier for a given GB (last tier's basePrice and minGB for bulk discount). */
@@ -144,10 +137,10 @@ function findUnlimitedPrice(
 }
 
 interface PurchasePageProps {
-  onNavigateToDeposit: () => void;
+  onNavigateToDeposit?: () => void;
 }
 
-export default function PurchasePage({ onNavigateToDeposit }: PurchasePageProps) {
+export default function PurchasePage(_props: PurchasePageProps) {
   const dispatch = useDispatch();
   const { t } = useTranslation('app');
   const [segment, setSegment] = useState<'gb' | 'unlimited'>('gb');
@@ -155,7 +148,6 @@ export default function PurchasePage({ onNavigateToDeposit }: PurchasePageProps)
     dispatch(setPurchaseSegment(segment));
   }, [segment, dispatch]);
   const [selectedQuickIndex, setSelectedQuickIndex] = useState<number | null>(1);
-  const [selectedSupplementaryIndex, setSelectedSupplementaryIndex] = useState<number | null>(null);
   const [customGb, setCustomGb] = useState(50);
   const [customGbInput, setCustomGbInput] = useState('50');
   const [autoReplenish, setAutoReplenish] = useState(true);
@@ -177,6 +169,9 @@ export default function PurchasePage({ onNavigateToDeposit }: PurchasePageProps)
   const [promoSuccess, setPromoSuccess] = useState<string | null>(null);
   const [appliedPromo, setAppliedPromo] = useState<PromoCodeDto | null>(null);
   const [discountedTotal, setDiscountedTotal] = useState<number | null>(null);
+
+  const [orderLoading, setOrderLoading] = useState(false);
+  const [orderError, setOrderError] = useState<string | null>(null);
 
   const gbProduct = useMemo(() => {
     const list = products.filter((p) => {
@@ -229,17 +224,24 @@ export default function PurchasePage({ onNavigateToDeposit }: PurchasePageProps)
   const sliderMin = (gbProduct as any)?.minOrderAmount ?? DEFAULT_SLIDER_MIN;
   const sliderMax = (gbProduct as any)?.maxOrderAmount ?? DEFAULT_SLIDER_MAX;
 
-  const quickPackages = useMemo(() => {
-    if (!gbProduct || tableEntries.length === 0)
-      return [
-        { gb: 10, pricePerGb: 3.5, popular: false },
-        { gb: 50, pricePerGb: 3.2, popular: true },
-        { gb: 100, pricePerGb: 2.8, popular: false },
-        { gb: 250, pricePerGb: 2.5, popular: false },
-        { gb: 500, pricePerGb: 2.1, popular: false },
-      ];
-    return buildQuickPackagesFromTable(tableEntries, gbProduct.id);
+  const quickOptions = useMemo(() => {
+    return QUICK_OPTION_DEFS.map((def) => {
+      if (!gbProduct || tableEntries.length === 0) {
+        return { ...def, totalPrice: def.gb * 0.5, pricePerGb: 0.5 };
+      }
+      const computed = computePriceForGb(def.gb, tableEntries, gbProduct);
+      return {
+        ...def,
+        totalPrice: computed?.totalPrice ?? def.gb * 0.5,
+        pricePerGb: computed?.pricePerGb ?? 0.5,
+      };
+    });
   }, [gbProduct, tableEntries]);
+
+  const maxSavingsPct = useMemo(() => {
+    const attrs = getBulkAttrs(gbProduct);
+    return attrs.bulkDiscountMaxPercent ?? 30;
+  }, [gbProduct]);
 
   useEffect(() => {
     let cancelled = false;
@@ -323,41 +325,23 @@ export default function PurchasePage({ onNavigateToDeposit }: PurchasePageProps)
   })();
 
   const displayVolume =
-    selectedSupplementaryIndex != null
-      ? SUPPLEMENTARY_PACKAGES[selectedSupplementaryIndex].gb
-      : selectedQuickIndex != null
-        ? quickPackages[selectedQuickIndex]?.gb ?? customGb
-        : effectiveCustomGb;
+    selectedQuickIndex != null
+      ? quickOptions[selectedQuickIndex]?.gb ?? customGb
+      : effectiveCustomGb;
 
   const { total, pricePerGb: displayPricePerGb, volumeDiscount } = useMemo(() => {
     const gb = displayVolume;
-    if (selectedSupplementaryIndex != null && SUPPLEMENTARY_PACKAGES[selectedSupplementaryIndex]) {
-      const pkg = SUPPLEMENTARY_PACKAGES[selectedSupplementaryIndex];
-      const totalPrice = pkg.totalPrice;
-      return {
-        total: totalPrice,
-        pricePerGb: totalPrice / pkg.gb,
-        volumeDiscount: 0,
-      };
-    }
-    if (selectedQuickIndex != null && quickPackages[selectedQuickIndex]) {
-      const pkg = quickPackages[selectedQuickIndex];
-      const subtotal = pkg.gb * pkg.pricePerGb;
-      return {
-        total: subtotal,
-        pricePerGb: pkg.pricePerGb,
-        volumeDiscount: 0,
-      };
+    if (selectedQuickIndex != null && quickOptions[selectedQuickIndex]) {
+      const opt = quickOptions[selectedQuickIndex];
+      return { total: opt.totalPrice, pricePerGb: opt.pricePerGb, volumeDiscount: 0 };
     }
     if (!gbProduct || tableEntries.length === 0) {
-      const fallbackPerGb = gb >= 500 ? 2.1 : gb >= 250 ? 2.5 : gb >= 100 ? 2.8 : gb >= 50 ? 3.2 : 3.5;
-      const subtotal = gb * fallbackPerGb;
-      const volDiscount = gb >= 50 ? Math.round((gb * 3.5 - subtotal) * 100) / 100 : 0;
-      return { total: Math.max(0, subtotal - volDiscount), pricePerGb: fallbackPerGb, volumeDiscount: volDiscount };
+      const fallbackPerGb = 0.5;
+      return { total: gb * fallbackPerGb, pricePerGb: fallbackPerGb, volumeDiscount: 0 };
     }
     const tier = findTierForGb(tableEntries, gb, gbProduct.id);
     if (!tier || tier.basePrice <= 0) {
-      const fallbackPerGb = 3.2;
+      const fallbackPerGb = 0.5;
       return { total: gb * fallbackPerGb, pricePerGb: fallbackPerGb, volumeDiscount: 0 };
     }
     const attrs = getBulkAttrs(gbProduct);
@@ -374,7 +358,7 @@ export default function PurchasePage({ onNavigateToDeposit }: PurchasePageProps)
       pricePerGb: bulk.pricePerGBWithDiscount,
       volumeDiscount: discount > 0 ? discount : 0,
     };
-  }, [displayVolume, selectedQuickIndex, selectedSupplementaryIndex, quickPackages, gbProduct, tableEntries]);
+  }, [displayVolume, selectedQuickIndex, quickOptions, gbProduct, tableEntries]);
 
   const currentTotal = segment === 'unlimited' ? unlimitedTotal : total;
 
@@ -417,6 +401,48 @@ export default function PurchasePage({ onNavigateToDeposit }: PurchasePageProps)
     if (!appliedPromo || currentTotal <= 0) return;
     promoApi.apply(appliedPromo.code, currentTotal).then((res) => setDiscountedTotal(res.discountedPrice)).catch(() => {});
   }, [currentTotal, appliedPromo?.code]);
+
+  const handleCreateOrder = async () => {
+    const product = segment === 'unlimited' ? unlimitedProduct : gbProduct;
+    if (!product) return;
+    setOrderLoading(true);
+    setOrderError(null);
+    try {
+      const finalPrice = discountedTotal != null ? discountedTotal : currentTotal;
+      if (segment === 'unlimited') {
+        const dur = unlimitedDurationOptions[unlimitedDurationIndex];
+        const speed = unlimitedSpeedOptions[unlimitedSpeedIndex];
+        if (!dur || !speed) throw new Error('Select duration and speed');
+        await ordersApi.createOrder({
+          serviceType: 17,
+          productId: typeof product.id === 'string' ? Number(product.id) : product.id,
+          quantity: dur.quantity,
+          price: finalPrice,
+          modificatorsSelection: { SPEED: speed.level },
+          ...(appliedPromo?.code && { promoCode: appliedPromo.code }),
+        });
+      } else {
+        const multiplier = (product as any).displayMultiplier ?? BYTES_PER_GB;
+        const quantityBytes = displayVolume * multiplier;
+        await ordersApi.createOrder({
+          serviceType: 17,
+          productId: typeof product.id === 'string' ? Number(product.id) : product.id,
+          quantity: quantityBytes,
+          price: finalPrice,
+          ...(appliedPromo?.code && { promoCode: appliedPromo.code }),
+        });
+      }
+      dispatch(setActivePage('overview'));
+    } catch (e: unknown) {
+      const msg =
+        e && typeof e === 'object' && 'response' in e
+          ? ((e as any).response?.data?.message ?? String((e as any).message ?? 'Order failed'))
+          : e instanceof Error ? e.message : 'Order failed';
+      setOrderError(msg);
+    } finally {
+      setOrderLoading(false);
+    }
+  };
 
   const productDisplayName = useMemo(() => {
     if (!gbProduct) return t('purchase.serviceTypeValue');
@@ -462,82 +488,44 @@ export default function PurchasePage({ onNavigateToDeposit }: PurchasePageProps)
                     <Package className="w-5 h-5 text-accent-primary" />
                     {t('purchase.quickSelection')}
                   </h2>
-                  <span className="text-[10px] font-label text-text-muted bg-bg-panel px-3 py-1 rounded-full border border-border-main/30">
-                    {t('purchase.saveUpTo')}
-                  </span>
+                  {maxSavingsPct > 0 && (
+                    <span className="text-[10px] font-label text-text-muted bg-bg-panel px-3 py-1 rounded-full border border-border-main/30">
+                      {t('purchase.saveUpToDynamic', { pct: maxSavingsPct })}
+                    </span>
+                  )}
                 </div>
                 {loading ? (
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4 w-full">
+                  <div className="flex flex-wrap gap-4 w-full">
                     {[10, 50, 100, 250, 500].map((gb) => (
-                      <div key={gb} className="bg-bg-panel border border-border-main/30 p-5 rounded-xl animate-pulse h-[120px]" />
+                      <div key={gb} className="bg-bg-panel border border-border-main/30 p-5 rounded-xl animate-pulse h-[120px] flex-1 min-w-[140px]" />
                     ))}
                   </div>
                 ) : (
-                  <>
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 w-full">
-                      {quickPackages.map((pkg, idx) => {
-                        const selected = selectedQuickIndex === idx && selectedSupplementaryIndex == null;
-                        return (
-                          <div
-                            key={`api-${pkg.gb}-${idx}`}
-                            role="button"
-                            tabIndex={0}
-                            onClick={() => {
-                              setSelectedQuickIndex(idx);
-                              setSelectedSupplementaryIndex(null);
-                            }}
-                            onKeyDown={(e) => e.key === 'Enter' && (setSelectedQuickIndex(idx), setSelectedSupplementaryIndex(null))}
-                            className={`relative p-5 rounded-xl flex flex-col items-center text-center cursor-pointer transition-all border ${
-                              selected ? 'bg-bg-panel border-accent-primary/60 ring-1 ring-accent-primary/20' : 'bg-bg-panel border-border-main/30 hover:border-accent-primary/40'
-                            }`}
-                          >
-                            {pkg.popular && (
-                              <div className="absolute top-0 right-0 bg-accent-primary text-white text-[10px] font-bold px-2 py-0.5 rounded-bl-lg">
-                                {t('purchase.popular')}
-                              </div>
-                            )}
-                            <span className="text-xl font-bold text-text-primary mb-1">{pkg.gb}GB</span>
-                            <span className="text-[10px] font-label text-text-muted mb-4">${pkg.pricePerGb.toFixed(2)} / GB</span>
-                            <span className={`w-full py-2 text-xs font-bold rounded-lg ${selected ? 'bg-accent-primary text-white' : 'bg-bg-panel text-text-secondary'}`}>
-                              {selected ? t('purchase.selected') : t('purchase.select')}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <div className="mt-6">
-                      <p className="text-xs font-label text-text-muted uppercase tracking-wider mb-3">{t('purchase.supplementaryPackages')}</p>
-                      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 w-full">
-                        {SUPPLEMENTARY_PACKAGES.map((pkg, idx) => {
-                          const selected = selectedSupplementaryIndex === idx;
-                          const pricePerGb = pkg.totalPrice / pkg.gb;
-                          return (
-                            <div
-                              key={`sup-${pkg.gb}-${idx}`}
-                              role="button"
-                              tabIndex={0}
-                              onClick={() => {
-                                setSelectedSupplementaryIndex(idx);
-                                setSelectedQuickIndex(null);
-                              }}
-                              onKeyDown={(e) => e.key === 'Enter' && (setSelectedSupplementaryIndex(idx), setSelectedQuickIndex(null))}
-                              className={`relative p-5 rounded-xl flex flex-col items-center text-center cursor-pointer transition-all border ${
-                                selected ? 'bg-bg-panel border-accent-primary/60 ring-1 ring-accent-primary/20' : 'bg-bg-panel border-border-main/30 hover:border-accent-primary/40'
-                              }`}
-                            >
-                              <span className="text-sm font-semibold text-text-primary mb-1">{t(pkg.labelKey)}</span>
-                              <span className="text-xl font-bold text-text-primary mb-0.5">{pkg.gb} GB</span>
-                              <span className="text-sm font-medium text-accent-primary mb-1">${pkg.totalPrice.toFixed(2)}</span>
-                              <span className="text-[10px] font-label text-text-muted mb-4">${pricePerGb.toFixed(2)}/GB</span>
-                              <span className={`w-full py-2 text-xs font-bold rounded-lg ${selected ? 'bg-accent-primary text-white' : 'bg-bg-panel text-text-secondary'}`}>
-                                {selected ? t('purchase.selected') : t('purchase.select')}
-                              </span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </>
+                  <div className="flex flex-wrap gap-4 w-full">
+                    {quickOptions.map((opt, idx) => {
+                      const selected = selectedQuickIndex === idx;
+                      return (
+                        <div
+                          key={`quick-${opt.gb}-${idx}`}
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => setSelectedQuickIndex(idx)}
+                          onKeyDown={(e) => e.key === 'Enter' && setSelectedQuickIndex(idx)}
+                          className={`relative p-5 rounded-xl flex flex-col items-center text-center cursor-pointer transition-all border flex-1 min-w-[140px] ${
+                            selected ? 'bg-bg-panel border-accent-primary/60 ring-1 ring-accent-primary/20' : 'bg-bg-panel border-border-main/30 hover:border-accent-primary/40'
+                          }`}
+                        >
+                          <span className="text-sm font-semibold text-text-primary mb-1">{t(opt.labelKey)}</span>
+                          <span className="text-xl font-bold text-text-primary mb-0.5">{opt.gb} GB</span>
+                          <span className="text-sm font-medium text-accent-primary mb-1">${opt.totalPrice.toFixed(2)}</span>
+                          <span className="text-[10px] font-label text-text-muted mb-4">${opt.pricePerGb.toFixed(2)}/GB</span>
+                          <span className={`w-full py-2 text-xs font-bold rounded-lg ${selected ? 'bg-accent-primary text-white' : 'bg-bg-panel text-text-secondary'}`}>
+                            {selected ? t('purchase.selected') : t('purchase.select')}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 )}
               </section>
 
@@ -565,7 +553,6 @@ export default function PurchasePage({ onNavigateToDeposit }: PurchasePageProps)
                         onChange={(e) => {
                           const v = Number(e.target.value);
                           setSelectedQuickIndex(null);
-                          setSelectedSupplementaryIndex(null);
                           setCustomGb(v);
                           setCustomGbInput(String(v));
                         }}
@@ -579,15 +566,12 @@ export default function PurchasePage({ onNavigateToDeposit }: PurchasePageProps)
                       max={sliderMax}
                       placeholder="0"
                       value={
-                        selectedSupplementaryIndex != null
-                          ? String(SUPPLEMENTARY_PACKAGES[selectedSupplementaryIndex].gb)
-                          : selectedQuickIndex != null
-                            ? String(quickPackages[selectedQuickIndex]?.gb ?? customGb)
-                            : customGbInput
+                        selectedQuickIndex != null
+                          ? String(quickOptions[selectedQuickIndex]?.gb ?? customGb)
+                          : customGbInput
                       }
                       onChange={(e) => {
                         setSelectedQuickIndex(null);
-                        setSelectedSupplementaryIndex(null);
                         setCustomGbInput(e.target.value);
                         const n = parseInt(e.target.value, 10);
                         if (!Number.isNaN(n) && n >= 1) setCustomGb(clampGb(n));
@@ -606,10 +590,8 @@ export default function PurchasePage({ onNavigateToDeposit }: PurchasePageProps)
                         }
                       }}
                       onFocus={() => {
-                        if (selectedSupplementaryIndex != null)
-                          setCustomGbInput(String(SUPPLEMENTARY_PACKAGES[selectedSupplementaryIndex].gb));
-                        else if (selectedQuickIndex != null)
-                          setCustomGbInput(String(quickPackages[selectedQuickIndex]?.gb ?? customGb));
+                        if (selectedQuickIndex != null)
+                          setCustomGbInput(String(quickOptions[selectedQuickIndex]?.gb ?? customGb));
                       }}
                       className="bg-transparent border-none text-2xl font-bold text-center w-20 text-text-primary focus:ring-0 p-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
@@ -803,13 +785,21 @@ export default function PurchasePage({ onNavigateToDeposit }: PurchasePageProps)
                     </div>
                   </div>
                   <p className="text-right text-[10px] text-text-muted mb-4">{t('purchase.unlimitedBilledOnce')}</p>
+                  {orderError && (
+                    <p className="text-xs text-red-400 mb-2">{orderError}</p>
+                  )}
                   <button
                     type="button"
-                    onClick={onNavigateToDeposit}
-                    className="w-full py-4 bg-accent-primary text-white font-bold rounded-xl flex items-center justify-center gap-2 hover:opacity-95 transition-opacity"
+                    onClick={handleCreateOrder}
+                    disabled={orderLoading || !unlimitedProduct}
+                    className="w-full py-4 bg-accent-primary text-white font-bold rounded-xl flex items-center justify-center gap-2 hover:opacity-95 transition-opacity disabled:opacity-50"
                   >
-                    {t('purchase.confirmPurchase')}
-                    <ArrowRight className="w-5 h-5" />
+                    {orderLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                      <>
+                        {t('purchase.confirmPurchase')}
+                        <ArrowRight className="w-5 h-5" />
+                      </>
+                    )}
                   </button>
                 </div>
               </>
@@ -843,13 +833,21 @@ export default function PurchasePage({ onNavigateToDeposit }: PurchasePageProps)
                       </span>
                     </div>
                   </div>
+                  {orderError && (
+                    <p className="text-xs text-red-400 mb-2">{orderError}</p>
+                  )}
                   <button
                     type="button"
-                    onClick={onNavigateToDeposit}
-                    className="w-full py-4 bg-accent-primary text-white font-bold rounded-xl flex items-center justify-center gap-2 hover:opacity-95 transition-opacity"
+                    onClick={handleCreateOrder}
+                    disabled={orderLoading || !gbProduct}
+                    className="w-full py-4 bg-accent-primary text-white font-bold rounded-xl flex items-center justify-center gap-2 hover:opacity-95 transition-opacity disabled:opacity-50"
                   >
-                    {t('purchase.confirmPurchase')}
-                    <ArrowRight className="w-5 h-5" />
+                    {orderLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                      <>
+                        {t('purchase.confirmPurchase')}
+                        <ArrowRight className="w-5 h-5" />
+                      </>
+                    )}
                   </button>
                 </div>
               </>
