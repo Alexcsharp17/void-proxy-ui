@@ -75,7 +75,9 @@
     "allTypes": "All types",
     "loadingOrders": "Loading orders…",
     "showingItems_one": "Showing {{count}} item",
-    "showingItems_other": "Showing {{count}} items"
+    "showingItems_other": "Showing {{count}} items",
+    "orderExpired": "Expired",
+    "orderDurationHint": "Purchased duration"
   },
   "purchase": {
     "title": "Purchase",

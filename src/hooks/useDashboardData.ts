@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { ordersApi, userApi } from '../api';
 import type { Order as ApiOrder } from '../api';
 import { orderToDisplayOrder } from '../api/mappers/orders';
@@ -70,6 +70,8 @@ export function useDashboardData(): {
   error: string | null;
   showDeletionBanner: boolean;
   deletionCountdown: string;
+  /** Reload orders + balance (e.g. after purchase). Use `{ showLoading: false }` to avoid full-page skeleton. */
+  refetch: (options?: { showLoading?: boolean }) => Promise<void>;
 } {
   const { user } = useAuth();
   const [orders, setOrders] = useState<ApiOrder[]>([]);
@@ -79,34 +81,53 @@ export function useDashboardData(): {
   const [error, setError] = useState<string | null>(null);
   const [deletionCountdown, setDeletionCountdown] = useState('00:00:00');
 
-  useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      setLoading(true);
+  const load = useCallback(
+    async (options?: { showLoading?: boolean }) => {
+      if (!user?.id) {
+        setOrders([]);
+        setLoading(false);
+        return;
+      }
+      const showLoading = options?.showLoading !== false;
+      if (showLoading) setLoading(true);
       setError(null);
       try {
         const [ordersRes, balanceRes] = await Promise.all([
           ordersApi.getOrders(),
           userApi.getBalance().catch(() => ({ success: false, balance: 0, currency: 'USD' })),
         ]);
-        if (!cancelled) {
-          setOrders(ordersRes ?? []);
-          if (balanceRes?.success !== false) {
-            setBalance(balanceRes.balance ?? 0);
-            setCurrency(balanceRes.currency ?? 'USD');
-          }
+        const list = ordersRes ?? [];
+        const sorted = [...list].sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        setOrders(sorted);
+        if (balanceRes?.success !== false) {
+          setBalance(balanceRes.balance ?? 0);
+          setCurrency(balanceRes.currency ?? 'USD');
         }
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load');
+        setError(e instanceof Error ? e.message : 'Failed to load');
       } finally {
-        if (!cancelled) setLoading(false);
+        if (showLoading) setLoading(false);
+      }
+    },
+    [user?.id]
+  );
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  /** После curl / другого окна — обновить список при возврате на вкладку */
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible' && user?.id) {
+        void load({ showLoading: false });
       }
     };
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [user?.id, load]);
 
   const usage = useMemo(() => computeUsageFromOrders(orders), [orders]);
 
@@ -162,5 +183,6 @@ export function useDashboardData(): {
     error,
     showDeletionBanner,
     deletionCountdown,
+    refetch: load,
   };
 }

@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import ProtectedRoute from '../components/ProtectedRoute';
+import { DashboardDataProvider } from '../contexts/DashboardDataContext';
 import App from '../App';
 import LandingPage from './LandingPage';
 
@@ -26,7 +27,9 @@ export default function RootRoute() {
 
   return (
     <ProtectedRoute>
-      <App />
+      <DashboardDataProvider>
+        <App />
+      </DashboardDataProvider>
     </ProtectedRoute>
   );
 }

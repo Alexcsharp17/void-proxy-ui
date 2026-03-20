@@ -42,6 +42,12 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
     if (page > totalPages) setPage(1);
   }, [page, totalPages]);
 
+  /** Новый заказ приходит первым с API — показываем первую страницу */
+  const firstOrderId = orders[0]?.id;
+  useEffect(() => {
+    setPage(1);
+  }, [firstOrderId]);
+
   const pageNumbers = useMemo(() => {
     const maxVisible = 7;
     if (totalPages <= maxVisible) {

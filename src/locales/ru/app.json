@@ -77,7 +77,9 @@
     "showingItems_one": "Показан {{count}} заказ",
     "showingItems_few": "Показано {{count}} заказа",
     "showingItems_many": "Показано {{count}} заказов",
-    "showingItems_other": "Показано {{count}} заказов"
+    "showingItems_other": "Показано {{count}} заказов",
+    "orderExpired": "Истекло",
+    "orderDurationHint": "Купленная длительность"
   },
   "purchase": {
     "title": "Оформление заказа",

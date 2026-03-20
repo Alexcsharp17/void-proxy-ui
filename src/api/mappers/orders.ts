@@ -49,15 +49,29 @@ function getProductLabel(order: ApiOrder): string {
 function formatQuantity(order: ApiOrder): string {
   const q = order.quantity ?? 0;
   const rem = order.quantityRemaining ?? q;
-  const baseUnit = order.baseUnit ?? '';
-  const displayUnit = order.displayUnit ?? '';
-  if (baseUnit === 'byte' && (displayUnit === 'GB' || displayUnit === 'gb')) {
+  const baseUnit = (order.baseUnit ?? '').toLowerCase();
+  const displayUnit = (order.displayUnit ?? '').toLowerCase();
+  if (baseUnit === 'byte' && (displayUnit === 'gb')) {
     const totalGb = (q / (1024 ** 3)).toFixed(2);
     const remGb = (rem / (1024 ** 3)).toFixed(2);
     return `${remGb} GB / ${totalGb} GB`;
   }
-  if (baseUnit === 'second' && displayUnit === 'hour') return 'Unlimited';
+  if (baseUnit === 'second' && displayUnit === 'hour') {
+    const effectiveLimit = Math.max(Number(q), Number(order.quantityRemaining ?? q));
+    const hours = effectiveLimit / 3600;
+    return `${hours.toFixed(2)} hour`;
+  }
   return `${order.completed ?? 0}/${q}`;
+}
+
+function unlimitedTimeMetaForOrder(order: ApiOrder): { createdAt: string; effectiveLimitSeconds: number } | undefined {
+  const baseUnit = (order.baseUnit ?? '').toLowerCase();
+  const displayUnit = (order.displayUnit ?? '').toLowerCase();
+  if (baseUnit !== 'second' || displayUnit !== 'hour') return undefined;
+  if (!order.createdAt) return undefined;
+  const effectiveLimit = Math.max(Number(order.quantity ?? 0), Number(order.quantityRemaining ?? 0));
+  if (effectiveLimit <= 0) return undefined;
+  return { createdAt: order.createdAt, effectiveLimitSeconds: effectiveLimit };
 }
 
 function timeAgo(dateStr: string): string {
@@ -83,6 +97,7 @@ export type OrderProductType = 'proxies' | 'telegram' | 'other';
 
 export interface DisplayOrderNoIcon extends Omit<DisplayOrder, 'icon'> {
   productType: OrderProductType;
+  unlimitedTimeMeta?: { createdAt: string; effectiveLimitSeconds: number };
 }
 
 export function orderToDisplayOrder(apiOrder: ApiOrder): DisplayOrderNoIcon {
@@ -97,6 +112,7 @@ export function orderToDisplayOrder(apiOrder: ApiOrder): DisplayOrderNoIcon {
     id: String(apiOrder.id),
     product: getProductLabel(apiOrder),
     quantity: formatQuantity(apiOrder),
+    unlimitedTimeMeta: unlimitedTimeMetaForOrder(apiOrder),
     status: toDisplayStatus(apiOrder.status),
     date: formatDate(apiOrder.createdAt),
     price: apiOrder.charge ? `$${apiOrder.charge}` : '—',

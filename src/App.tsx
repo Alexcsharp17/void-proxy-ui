@@ -14,7 +14,7 @@ import {
 } from './store/slices/appSlice';
 import i18n from './i18n/config';
 import { useAuth } from './contexts/AuthContext';
-import { useDashboardData } from './hooks/useDashboardData';
+import { useDashboardDataContext } from './contexts/DashboardDataContext';
 
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -36,7 +36,8 @@ export default function App() {
   const dispatch = useDispatch();
   const { user } = useAuth();
   const { activePage, theme, isMobileMenuOpen, isDesktop, proxyGeneratorOrderId, proxyCheckerInitialProxies } = useSelector((state: RootState) => state.app);
-  const { dashboardData, orders: ordersNoIcon, loading: dataLoading, balance, currency, showDeletionBanner, deletionCountdown } = useDashboardData();
+  const { dashboardData, orders: ordersNoIcon, loading: dataLoading, balance, currency, showDeletionBanner, deletionCountdown } =
+    useDashboardDataContext();
 
   const orders: Order[] = useMemo(
     () =>
@@ -44,6 +45,7 @@ export default function App() {
         id: o.id,
         product: o.product,
         quantity: o.quantity,
+        unlimitedTimeMeta: o.unlimitedTimeMeta,
         status: o.status,
         date: o.date,
         price: o.price,

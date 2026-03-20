@@ -7,6 +7,7 @@ import { productsApi, promoApi, ordersApi } from '../api';
 import type { Product, PricingTableEntry, PricingTableResponse, PricingModifiersResponse } from '../api/types';
 import type { PromoCodeDto } from '../api/promo.api';
 import { calculateBulkDiscount } from '../utils/bulkDiscount';
+import { useDashboardDataContext } from '../contexts/DashboardDataContext';
 
 const BYTES_PER_GB = 1e9;
 const DEFAULT_SLIDER_MIN = 1;
@@ -142,6 +143,7 @@ interface PurchasePageProps {
 
 export default function PurchasePage(_props: PurchasePageProps) {
   const dispatch = useDispatch();
+  const { refetch: refetchDashboard } = useDashboardDataContext();
   const { t } = useTranslation('app');
   const [segment, setSegment] = useState<'gb' | 'unlimited'>('gb');
   useEffect(() => {
@@ -432,6 +434,7 @@ export default function PurchasePage(_props: PurchasePageProps) {
           ...(appliedPromo?.code && { promoCode: appliedPromo.code }),
         });
       }
+      await refetchDashboard({ showLoading: false });
       dispatch(setActivePage('overview'));
     } catch (e: unknown) {
       const msg =

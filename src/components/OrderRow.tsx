@@ -1,5 +1,52 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Order } from '../types';
+
+function formatRemainingSeconds(seconds: number, expiredLabel: string): string {
+  if (seconds <= 0) return expiredLabel;
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  if (minutes > 0) return `${minutes}m ${secs}s`;
+  return `${secs}s`;
+}
+
+function UnlimitedRemainingTime({
+  createdAt,
+  effectiveLimitSeconds,
+}: {
+  createdAt: string;
+  effectiveLimitSeconds: number;
+}) {
+  const { t } = useTranslation('app');
+  const expiredLabel = t('dashboard.orderExpired');
+  const [remainingSec, setRemainingSec] = useState(0);
+
+  useEffect(() => {
+    const tick = () => {
+      const created = new Date(createdAt).getTime();
+      const elapsed = Math.floor((Date.now() - created) / 1000);
+      setRemainingSec(Math.max(0, effectiveLimitSeconds - elapsed));
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [createdAt, effectiveLimitSeconds]);
+
+  const text = formatRemainingSeconds(remainingSec, expiredLabel);
+  const isExpired = remainingSec <= 0;
+
+  return (
+    <span
+      className={`text-[10px] font-semibold tracking-wide ${isExpired ? 'text-red-400' : 'text-emerald-400'}`}
+    >
+      {text}
+    </span>
+  );
+}
 
 /** Ensure value is renderable as React child (string/number), not object e.g. { en, ru } */
 function toText(v: unknown): string {
@@ -30,6 +77,7 @@ function getStatusIconStyles(status: Order['status']): { container: string; tool
 }
 
 const OrderRow: React.FC<{ order: Order; onOrderClick?: (order: Order) => void }> = ({ order, onOrderClick }) => {
+  const { t } = useTranslation('app');
   const [showTooltip, setShowTooltip] = useState(false);
   const statusStyles = getStatusIconStyles(order.status);
   const statusLabel = toText(order.status);
@@ -65,7 +113,19 @@ const OrderRow: React.FC<{ order: Order; onOrderClick?: (order: Order) => void }
         </div>
         <div>
           <p className="text-sm font-bold text-text-primary">{toText(order.product)}</p>
-          <p className="text-[10px] text-text-secondary font-medium uppercase tracking-wider">{toText(order.quantity)}</p>
+          {order.unlimitedTimeMeta ? (
+            <div className="mt-0.5 flex flex-col gap-0.5">
+              <p className="text-[10px] text-text-secondary font-medium tracking-wide" title={t('dashboard.orderDurationHint')}>
+                {toText(order.quantity)}
+              </p>
+              <UnlimitedRemainingTime
+                createdAt={order.unlimitedTimeMeta.createdAt}
+                effectiveLimitSeconds={order.unlimitedTimeMeta.effectiveLimitSeconds}
+              />
+            </div>
+          ) : (
+            <p className="text-[10px] text-text-secondary font-medium uppercase tracking-wider">{toText(order.quantity)}</p>
+          )}
         </div>
       </div>
       <div className="flex items-center gap-8">

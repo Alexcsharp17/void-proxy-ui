@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Zap, Loader2, CheckCircle, Store, UserPlus, BadgeCheck } from 'lucide-react';
 import { productsApi, ordersApi } from '../api';
 import { useAuth } from '../contexts/AuthContext';
+import { useDashboardDataContext } from '../contexts/DashboardDataContext';
 import type { Product } from '../api/types';
 
 function getLocalized(value: string | { en?: string; ru?: string } | undefined): string {
@@ -80,6 +81,7 @@ export default function AddonsPage() {
         price,
         targets: [],
       });
+      await refetchDashboard({ showLoading: false });
       await checkAuth();
       setSuccessMessage(t('addons.activated'));
     } catch (e: unknown) {
