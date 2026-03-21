@@ -46,6 +46,39 @@ function getProductLabel(order: ApiOrder): string {
   }
 }
 
+/** One side of "rem / total" for time-based unlimited proxy (same idea as GB). Exported for OrderRow live ticks. */
+export function formatUnlimitedTimeRatioPart(seconds: number): string {
+  const s = Math.max(0, Math.floor(Number(seconds) || 0));
+  if (s >= 86400) {
+    const d = s / 86400;
+    return Number.isInteger(d) ? `${d}d` : `${d.toFixed(1)}d`;
+  }
+  if (s >= 3600) {
+    const h = s / 3600;
+    return Number.isInteger(h) ? `${h}h` : `${h.toFixed(1)}h`.replace(/\.0h$/, 'h');
+  }
+  if (s >= 60) {
+    return `${Math.floor(s / 60)} min`;
+  }
+  return `${s}s`;
+}
+
+function remainingSecondsSnapshot(order: ApiOrder, effectiveLimitSeconds: number): number {
+  if (order.expiresAt) {
+    return Math.max(
+      0,
+      Math.floor((new Date(order.expiresAt).getTime() - Date.now()) / 1000)
+    );
+  }
+  const qr = order.quantityRemaining;
+  if (qr != null && !Number.isNaN(Number(qr))) {
+    return Math.max(0, Number(qr));
+  }
+  if (!order.createdAt) return effectiveLimitSeconds;
+  const elapsed = Math.floor((Date.now() - new Date(order.createdAt).getTime()) / 1000);
+  return Math.max(0, effectiveLimitSeconds - elapsed);
+}
+
 function formatQuantity(order: ApiOrder): string {
   const q = order.quantity ?? 0;
   const rem = order.quantityRemaining ?? q;
@@ -57,21 +90,34 @@ function formatQuantity(order: ApiOrder): string {
     return `${remGb} GB / ${totalGb} GB`;
   }
   if (baseUnit === 'second' && displayUnit === 'hour') {
-    const effectiveLimit = Math.max(Number(q), Number(order.quantityRemaining ?? q));
-    const hours = effectiveLimit / 3600;
-    return `${hours.toFixed(2)} hour`;
+    const totalSec = Math.max(Number(q), Number(order.quantityRemaining ?? q), 1);
+    const remSec = remainingSecondsSnapshot(order, totalSec);
+    return `${formatUnlimitedTimeRatioPart(remSec)} / ${formatUnlimitedTimeRatioPart(totalSec)}`;
   }
   return `${order.completed ?? 0}/${q}`;
 }
 
-function unlimitedTimeMetaForOrder(order: ApiOrder): { createdAt: string; effectiveLimitSeconds: number } | undefined {
+function unlimitedTimeMetaForOrder(order: ApiOrder):
+  | {
+      createdAt: string;
+      effectiveLimitSeconds: number;
+      expiresAt?: string | null;
+      quantityRemainingSec?: number;
+    }
+  | undefined {
   const baseUnit = (order.baseUnit ?? '').toLowerCase();
   const displayUnit = (order.displayUnit ?? '').toLowerCase();
   if (baseUnit !== 'second' || displayUnit !== 'hour') return undefined;
   if (!order.createdAt) return undefined;
   const effectiveLimit = Math.max(Number(order.quantity ?? 0), Number(order.quantityRemaining ?? 0));
   if (effectiveLimit <= 0) return undefined;
-  return { createdAt: order.createdAt, effectiveLimitSeconds: effectiveLimit };
+  const qr = order.quantityRemaining;
+  return {
+    createdAt: order.createdAt,
+    effectiveLimitSeconds: effectiveLimit,
+    expiresAt: order.expiresAt ?? null,
+    quantityRemainingSec: qr != null && !Number.isNaN(Number(qr)) ? Number(qr) : undefined,
+  };
 }
 
 function timeAgo(dateStr: string): string {

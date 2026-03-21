@@ -1,50 +1,46 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Order } from '../types';
+import { formatUnlimitedTimeRatioPart } from '../api/mappers/orders';
 
-function formatRemainingSeconds(seconds: number, expiredLabel: string): string {
-  if (seconds <= 0) return expiredLabel;
-  const days = Math.floor(seconds / 86400);
-  const hours = Math.floor((seconds % 86400) / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = Math.floor(seconds % 60);
-  if (days > 0) return `${days}d ${hours}h`;
-  if (hours > 0) return `${hours}h ${minutes}m`;
-  if (minutes > 0) return `${minutes}m ${secs}s`;
-  return `${secs}s`;
+type UnlimitedMeta = NonNullable<Order['unlimitedTimeMeta']>;
+
+function getRemainingSecondsLive(meta: UnlimitedMeta): number {
+  const { expiresAt, effectiveLimitSeconds, quantityRemainingSec, createdAt } = meta;
+  if (expiresAt) {
+    return Math.max(0, Math.floor((new Date(expiresAt).getTime() - Date.now()) / 1000));
+  }
+  if (quantityRemainingSec != null && !Number.isNaN(quantityRemainingSec)) {
+    return Math.max(0, quantityRemainingSec);
+  }
+  const created = new Date(createdAt).getTime();
+  const elapsed = Math.floor((Date.now() - created) / 1000);
+  return Math.max(0, effectiveLimitSeconds - elapsed);
 }
 
-function UnlimitedRemainingTime({
-  createdAt,
-  effectiveLimitSeconds,
-}: {
-  createdAt: string;
-  effectiveLimitSeconds: number;
-}) {
+/** Live "rem / total" for unlimited time proxy — same idea as GB row (rem GB / total GB). */
+function UnlimitedTimeUsedTotal({ meta }: { meta: UnlimitedMeta }) {
   const { t } = useTranslation('app');
-  const expiredLabel = t('dashboard.orderExpired');
-  const [remainingSec, setRemainingSec] = useState(0);
+  const totalSec = Math.max(1, meta.effectiveLimitSeconds);
+  const [remainingSec, setRemainingSec] = useState(() => getRemainingSecondsLive(meta));
 
   useEffect(() => {
-    const tick = () => {
-      const created = new Date(createdAt).getTime();
-      const elapsed = Math.floor((Date.now() - created) / 1000);
-      setRemainingSec(Math.max(0, effectiveLimitSeconds - elapsed));
-    };
+    const tick = () => setRemainingSec(getRemainingSecondsLive(meta));
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
-  }, [createdAt, effectiveLimitSeconds]);
+  }, [meta.createdAt, meta.effectiveLimitSeconds, meta.expiresAt, meta.quantityRemainingSec]);
 
-  const text = formatRemainingSeconds(remainingSec, expiredLabel);
   const isExpired = remainingSec <= 0;
+  const line = `${formatUnlimitedTimeRatioPart(remainingSec)} / ${formatUnlimitedTimeRatioPart(totalSec)}`;
 
   return (
-    <span
-      className={`text-[10px] font-semibold tracking-wide ${isExpired ? 'text-red-400' : 'text-emerald-400'}`}
+    <p
+      className={`text-[10px] font-medium tracking-wide ${isExpired ? 'text-red-400' : 'text-text-secondary'}`}
+      title={t('dashboard.orderDurationHint')}
     >
-      {text}
-    </span>
+      {line}
+    </p>
   );
 }
 
@@ -114,14 +110,8 @@ const OrderRow: React.FC<{ order: Order; onOrderClick?: (order: Order) => void }
         <div>
           <p className="text-sm font-bold text-text-primary">{toText(order.product)}</p>
           {order.unlimitedTimeMeta ? (
-            <div className="mt-0.5 flex flex-col gap-0.5">
-              <p className="text-[10px] text-text-secondary font-medium tracking-wide" title={t('dashboard.orderDurationHint')}>
-                {toText(order.quantity)}
-              </p>
-              <UnlimitedRemainingTime
-                createdAt={order.unlimitedTimeMeta.createdAt}
-                effectiveLimitSeconds={order.unlimitedTimeMeta.effectiveLimitSeconds}
-              />
+            <div className="mt-0.5">
+              <UnlimitedTimeUsedTotal meta={order.unlimitedTimeMeta} />
             </div>
           ) : (
             <p className="text-[10px] text-text-secondary font-medium uppercase tracking-wider">{toText(order.quantity)}</p>
