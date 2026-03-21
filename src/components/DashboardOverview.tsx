@@ -10,7 +10,10 @@ const ORDERS_PER_PAGE = 5;
 interface DashboardOverviewProps {
   dashboardData: any;
   orders: Order[];
-  loading?: boolean;
+  /** Заказы грузятся отдельно от баланса — только таблица и usage ждут этот флаг. */
+  loadingOrders?: boolean;
+  /** Ошибка загрузки заказов (баланс мог уже подгрузиться). */
+  ordersError?: string | null;
   showDeletionBanner?: boolean;
   deletionCountdown?: string;
   onDepositClick?: () => void;
@@ -22,7 +25,8 @@ const ORDERS_THRESHOLD_COMPACT = 3;
 const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   dashboardData,
   orders,
-  loading,
+  loadingOrders: loading,
+  ordersError = null,
   showDeletionBanner = false,
   deletionCountdown = '00:00:00',
   onDepositClick,
@@ -97,8 +101,10 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 
     {/* Bento Grid Section */}
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-      {/* Usage Overview */}
-      <div className={`bg-bg-panel/40 backdrop-blur-xl rounded-2xl border border-border-main flex flex-col ${isCompact ? 'px-5 pt-5 pb-4 lg:px-6 lg:pt-6 lg:pb-5' : 'p-6 lg:p-8'}`}>
+      {/* Usage Overview (данные из заказов — могут прийти позже баланса) */}
+      <div
+        className={`bg-bg-panel/40 backdrop-blur-xl rounded-2xl border border-border-main flex flex-col ${isCompact ? 'px-5 pt-5 pb-4 lg:px-6 lg:pt-6 lg:pb-5' : 'p-6 lg:p-8'} ${loading ? 'opacity-90' : ''}`}
+      >
         <div className={`flex justify-between items-center ${isCompact ? 'mb-5' : 'mb-8'}`}>
           <h3 className="text-xs font-bold uppercase tracking-widest text-text-primary">{t('dashboard.usageOverview')}</h3>
           <button className="text-accent-primary text-[10px] font-bold flex items-center gap-1 hover:underline uppercase tracking-wider">
@@ -106,7 +112,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           </button>
         </div>
         
-        <div className={`flex flex-col md:flex-row items-center ${isCompact ? 'gap-6 lg:gap-10' : 'gap-8 lg:gap-12'}`}>
+        <div className={`flex flex-col md:flex-row items-center ${isCompact ? 'gap-6 lg:gap-10' : 'gap-8 lg:gap-12'} ${loading ? 'animate-pulse' : ''}`}>
           <div className="relative w-40 h-40 shrink-0">
             <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
               <circle 
@@ -195,6 +201,8 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       <div className="flex-1">
         {loading ? (
           <div className="p-6 text-text-secondary text-sm">{t('dashboard.loadingOrders')}</div>
+        ) : ordersError ? (
+          <div className="p-6 text-red-400/90 text-sm">{ordersError}</div>
         ) : (
           paginatedOrders.map((order) => (
             <OrderRow key={order.id} order={order} onOrderClick={onOrderClick} />

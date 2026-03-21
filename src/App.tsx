@@ -36,8 +36,17 @@ export default function App() {
   const dispatch = useDispatch();
   const { user } = useAuth();
   const { activePage, theme, isMobileMenuOpen, isDesktop, proxyGeneratorOrderId, proxyCheckerInitialProxies } = useSelector((state: RootState) => state.app);
-  const { dashboardData, orders: ordersNoIcon, loading: dataLoading, balance, currency, showDeletionBanner, deletionCountdown } =
-    useDashboardDataContext();
+  const {
+    dashboardData,
+    orders: ordersNoIcon,
+    loadingOrders,
+    loadingBalance,
+    balance,
+    currency,
+    showDeletionBanner,
+    deletionCountdown,
+    error: ordersError,
+  } = useDashboardDataContext();
 
   const orders: Order[] = useMemo(
     () =>
@@ -130,6 +139,7 @@ export default function App() {
           user={user ?? undefined}
           balance={balance}
           currency={currency}
+          balanceLoading={Boolean(user) && loadingBalance}
         />
 
         <div className="flex-1 flex flex-col p-6 lg:p-10 space-y-8">
@@ -137,7 +147,8 @@ export default function App() {
             <DashboardOverview
               dashboardData={dashboardData}
               orders={orders}
-              loading={dataLoading}
+              loadingOrders={loadingOrders}
+              ordersError={ordersError}
               showDeletionBanner={showDeletionBanner}
               deletionCountdown={deletionCountdown}
               onDepositClick={() => dispatch(setActivePage('deposit'))}

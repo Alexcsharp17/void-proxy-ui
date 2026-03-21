@@ -15,9 +15,19 @@ interface HeaderProps {
   user?: User | null;
   balance?: number | null;
   currency?: string;
+  /** Пока баланс запрашивается — показать плейсхолдер, не ждать заказы. */
+  balanceLoading?: boolean;
 }
 
-const Header: React.FC<HeaderProps> = ({ activePage, onMenuClick, onSettingsClick, user, balance, currency = 'USD' }) => {
+const Header: React.FC<HeaderProps> = ({
+  activePage,
+  onMenuClick,
+  onSettingsClick,
+  user,
+  balance,
+  currency = 'USD',
+  balanceLoading = false,
+}) => {
   const dispatch = useDispatch();
   const { t } = useTranslation('app');
   const locale = useSelector((s: RootState) => s.app.locale);
@@ -28,6 +38,7 @@ const Header: React.FC<HeaderProps> = ({ activePage, onMenuClick, onSettingsClic
   const displayName = user?.name ?? user?.email ?? user?.telegramUsername ?? t('common.user');
   const avatarUrl = user?.photoUrl ?? null;
   const balanceStr = balance != null ? `${Number(balance).toFixed(2)} ${currency}` : null;
+  const showBalanceBlock = balanceStr != null || balanceLoading;
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -92,11 +103,15 @@ const Header: React.FC<HeaderProps> = ({ activePage, onMenuClick, onSettingsClic
       </div>
 
       <div className="flex items-center gap-1.5 lg:gap-2">
-        {balanceStr != null && (
+        {showBalanceBlock && (
           <>
             <div className="text-right hidden sm:block">
               <p className="text-[10px] font-bold text-text-muted uppercase tracking-wider">{t('header.balance')}</p>
-              <p className="text-sm font-semibold text-text-primary">{balanceStr}</p>
+              <p
+                className={`text-sm font-semibold text-text-primary min-w-[5rem] ${balanceLoading && balanceStr == null ? 'animate-pulse text-text-muted' : ''}`}
+              >
+                {balanceLoading && balanceStr == null ? '…' : balanceStr}
+              </p>
             </div>
             <div className="hidden sm:block h-10 w-[1px] bg-border-main mx-0.5 lg:mx-1 shrink-0"></div>
           </>
