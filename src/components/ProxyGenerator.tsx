@@ -161,9 +161,10 @@ const ProxyGenerator: React.FC<ProxyGeneratorProps> = ({ orderIdFromOrderList = 
       return () => { cancelled = true; };
     }
     ordersApi
-      .getOrders()
-      .then((list) => {
+      .getOrders({ page: 1, pageSize: 500 })
+      .then((res) => {
         if (cancelled) return;
+        const list = res.orders;
         setOrders(list);
         const order = findFirstGbOrder(list);
         if (order) {

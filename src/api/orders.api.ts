@@ -1,5 +1,5 @@
 import { api } from './client';
-import type { Order } from './types';
+import type { Order, PagedList } from './types';
 
 export interface CreateOrderBody {
   serviceType: number | string;
@@ -29,9 +29,16 @@ export interface SubCredentialsResponse {
 }
 
 export const ordersApi = {
-  getOrders: async (): Promise<Order[]> => {
-    const res = await api.get<Order[]>('/orders');
-    return Array.isArray(res.data) ? res.data : [];
+  /** GET /orders — пагинация на бэкенде; по умолчанию page=1, pageSize=500. */
+  getOrders: async (opts?: { page?: number; pageSize?: number }): Promise<PagedList<Order>> => {
+    const res = await api.get<PagedList<Order>>('/orders', {
+      params: { page: opts?.page ?? 1, pageSize: opts?.pageSize ?? 500 },
+    });
+    const d = res.data;
+    if (d && Array.isArray(d.orders)) {
+      return d;
+    }
+    return { orders: [], total: 0, page: 1, pageSize: opts?.pageSize ?? 500 };
   },
 
   getSubCredentials: async (orderId: number): Promise<SubCredentialsResponse> => {

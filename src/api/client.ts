@@ -28,7 +28,8 @@ export function setOnUnauthorized(callback: (() => void) | null): void {
   onUnauthorized = callback;
 }
 
-const REQUEST_TIMEOUT_MS = 15000;
+/** Heavy GET /orders (large users); nginx/API may be slow; avoid false client timeouts. */
+const REQUEST_TIMEOUT_MS = 120000;
 
 function createClient() {
   const client = axios.create({

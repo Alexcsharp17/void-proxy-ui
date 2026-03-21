@@ -70,7 +70,18 @@ export interface AuthMeResponse {
   token: string;
 }
 
-/** Backend GET /orders returns array of Order (serviceType/status may be number or string) */
+/**
+ * Постраничный список заказов с API — аналог `List<T>` в C# плюс total/page/pageSize.
+ * Поле массива в JSON называется `orders` (контракт бэкенда).
+ */
+export type PagedList<T> = {
+  orders: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+};
+
+/** Backend GET /orders: элементы Order (serviceType/status могут быть number или string) */
 export interface Order {
   id: number;
   userId: string;

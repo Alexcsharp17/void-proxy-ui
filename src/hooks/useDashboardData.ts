@@ -93,10 +93,10 @@ export function useDashboardData(): {
       setError(null);
       try {
         const [ordersRes, balanceRes] = await Promise.all([
-          ordersApi.getOrders(),
+          ordersApi.getOrders({ page: 1, pageSize: 500 }),
           userApi.getBalance().catch(() => ({ success: false, balance: 0, currency: 'USD' })),
         ]);
-        const list = ordersRes ?? [];
+        const list = ordersRes?.orders ?? [];
         const sorted = [...list].sort(
           (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
