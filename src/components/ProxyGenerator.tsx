@@ -6,6 +6,79 @@ import CustomSelect from './CustomSelect';
 import AutoDismissAlert from './AutoDismissAlert';
 import { ordersApi, type Order } from '../api';
 import { toServiceType, ServiceType } from '../enums/api';
+import {
+  parseProxyConnectionString,
+  generateProxyConnectionString,
+  generateShortSessionId,
+  type ProxyProtocol,
+} from '../utils/proxyConnectionString';
+
+/** Same bounds as legacy Maskify UI */
+const TTL_SECONDS_MIN = 1;
+const TTL_SECONDS_MAX = 21600;
+
+const LOCATION_TO_REGION: Record<string, string | undefined> = {
+  UK: 'uk',
+  USA: 'us',
+  Germany: 'de',
+  France: 'fr',
+  Worldwide: undefined,
+};
+
+function sessionTypeToConnectionType(sessionType: string): 'sticky' | 'random' | 'rotation' | null {
+  if (sessionType === 'Rotating session') return 'rotation';
+  if (sessionType === 'Random session') return 'random';
+  return 'sticky';
+}
+
+function protocolLabelToApi(protocol: string): ProxyProtocol {
+  if (protocol === 'HTTP') return 'http';
+  if (protocol === 'SOCKS5') return 'socks';
+  return 'none';
+}
+
+function normalizeVoidHost(host: string): string {
+  if (!host) return 'void-proxy.com';
+  const h = host.toLowerCase();
+  if (h === 'void-proxy.com' || h.includes('void-proxy') || h === '172.65.224.137') return 'void-proxy.com';
+  return host;
+}
+
+/** After API returns raw lines, apply session/region/TTL/protocol like legacy OrderDetailsModal + ProxyGenerator. */
+function applyGeneratorOptionsToCredentials(
+  lines: string[],
+  sessionType: string,
+  location: string,
+  ttlSeconds: number,
+  protocolLabel: string
+): string[] {
+  const connectionType = sessionTypeToConnectionType(sessionType);
+  const region = LOCATION_TO_REGION[location];
+  const ttlMin =
+    ttlSeconds >= 60
+      ? Math.max(1, Math.min(1440, Math.floor(ttlSeconds / 60)))
+      : undefined;
+  const proto = protocolLabelToApi(protocolLabel);
+
+  return lines.map((line) => {
+    const parsed = parseProxyConnectionString(line);
+    if (!parsed) return line;
+    const host = normalizeVoidHost(parsed.host);
+    const sessionName = connectionType === 'sticky' ? generateShortSessionId() : undefined;
+    return generateProxyConnectionString({
+      baseUsername: parsed.baseUsername,
+      password: parsed.password,
+      host,
+      port: parsed.port,
+      connectionType,
+      sessionName,
+      region: region || undefined,
+      city: undefined,
+      ttl: ttlMin,
+      protocol: proto,
+    });
+  });
+}
 
 /** First GB proxy order (not unlimited) for sub-credentials generation */
 function findFirstGbOrder(orders: Order[]): Order | null {
@@ -28,6 +101,7 @@ interface ProxyGeneratorProps {
 const ProxyGenerator: React.FC<ProxyGeneratorProps> = ({ orderIdFromOrderList = null, onBackToOrders, onOpenProxyCheckerWithProxies }) => {
   const { t } = useTranslation('app');
   const [sessionType, setSessionType] = useState('Sticky session');
+  const sessionTypeOptions = ['Sticky session', 'Random session', 'Rotating session'] as const;
   const [proxyCount, setProxyCount] = useState(1);
   const [location, setLocation] = useState('UK');
   const [protocol, setProtocol] = useState('HTTP');
@@ -138,8 +212,27 @@ const ProxyGenerator: React.FC<ProxyGeneratorProps> = ({ orderIdFromOrderList = 
     try {
       const res = await ordersApi.generateSubCredentials(effectiveOrderId, count);
       if (res.success && res.credentials?.length) {
-        setGeneratedProxies(res.credentials.join('\n'));
-        setSubCredsCount((prev) => prev + res.credentials.length);
+        const ttlClamped = Math.max(TTL_SECONDS_MIN, Math.min(TTL_SECONDS_MAX, ttl));
+        // apply-settings expects the full visible list in DB order (same as legacy OrderDetailsModal).
+        const fullRes = await ordersApi.getSubCredentials(effectiveOrderId);
+        const rawStrings =
+          fullRes.success && fullRes.data?.length
+            ? fullRes.data.map((r) => r.credentialsString).filter((s): s is string => Boolean(s))
+            : res.credentials;
+        const withOptions = applyGeneratorOptionsToCredentials(
+          rawStrings,
+          sessionType,
+          location,
+          ttlClamped,
+          protocol
+        );
+        try {
+          await ordersApi.applySubCredentialsSettings(effectiveOrderId, withOptions);
+        } catch {
+          // Still show locally formatted lines if apply fails
+        }
+        setGeneratedProxies(withOptions.join('\n'));
+        setSubCredsCount(withOptions.length);
         await refetchSubCredentials();
       } else {
         setGenerateError('No credentials returned');
@@ -237,7 +330,7 @@ const ProxyGenerator: React.FC<ProxyGeneratorProps> = ({ orderIdFromOrderList = 
               label={t('proxyGenerator.sessionType')}
               value={sessionType}
               onChange={setSessionType}
-              options={['Sticky session', 'Rotating session']}
+              options={[...sessionTypeOptions]}
             />
             <div className="space-y-2">
               <label className="text-[10px] font-bold text-text-secondary uppercase tracking-wider">
@@ -275,8 +368,17 @@ const ProxyGenerator: React.FC<ProxyGeneratorProps> = ({ orderIdFromOrderList = 
             </label>
             <input
               type="number"
+              min={TTL_SECONDS_MIN}
+              max={TTL_SECONDS_MAX}
               value={ttl}
-              onChange={(e) => setTtl(parseInt(e.target.value) || 3600)}
+              onChange={(e) => {
+                const n = parseInt(e.target.value, 10);
+                if (Number.isNaN(n)) {
+                  setTtl(3600);
+                  return;
+                }
+                setTtl(Math.max(TTL_SECONDS_MIN, Math.min(TTL_SECONDS_MAX, n)));
+              }}
               className="w-full bg-bg-input border border-border-main/20 rounded-xl px-4 py-3 text-sm focus:border-accent-primary outline-none transition-colors"
             />
             <p className="text-[10px] text-text-muted">{t('proxyGenerator.maxTtl')}</p>
