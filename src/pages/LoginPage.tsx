@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
@@ -19,8 +19,16 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [captchaPassed, setCaptchaPassed] = useState(false);
+  /** Увеличиваем только при явном сбросе капчи — НЕ при успехе (иначе key менялся бы на токен и ломал Turnstile). */
+  const [turnstileResetId, setTurnstileResetId] = useState(0);
 
   const redirectTo = searchParams.get('redirect') || '/';
+
+  const resetTurnstile = useCallback(() => {
+    setTurnstileToken(null);
+    setCaptchaPassed(false);
+    setTurnstileResetId((n) => n + 1);
+  }, []);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -42,13 +50,11 @@ export default function LoginPage() {
           navigate(redirectTo, { replace: true });
         } else {
           setError(t('login.invalidToken'));
-          setTurnstileToken(null);
-          setCaptchaPassed(false);
+          resetTurnstile();
         }
       } catch {
         setError(t('login.loginFailed'));
-        setTurnstileToken(null);
-        setCaptchaPassed(false);
+        resetTurnstile();
       } finally {
         setLoading(false);
       }
@@ -68,13 +74,11 @@ export default function LoginPage() {
         navigate(redirectTo, { replace: true });
       } else {
         setError(t('login.emailVerificationRequired'));
-        setTurnstileToken(null);
-        setCaptchaPassed(false);
+        resetTurnstile();
       }
     } catch {
       setError(t('login.loginFailed'));
-      setTurnstileToken(null);
-      setCaptchaPassed(false);
+      resetTurnstile();
     } finally {
       setLoading(false);
     }
@@ -183,22 +187,16 @@ export default function LoginPage() {
               </div>
           </div>
 
-          {!isTurnstileDisabled() && (
-            <div style={{ display: captchaPassed ? 'none' : undefined }}>
+          {!isTurnstileDisabled() && !captchaPassed && (
+            <div className="min-h-[65px]">
               <TurnstileWidget
-                key={turnstileToken ?? 'unsolved'}
+                key={turnstileResetId}
                 onSuccess={(token) => {
                   setTurnstileToken(token);
                   setCaptchaPassed(true);
                 }}
-                onError={() => {
-                  setTurnstileToken(null);
-                  setCaptchaPassed(false);
-                }}
-                onExpire={() => {
-                  setTurnstileToken(null);
-                  setCaptchaPassed(false);
-                }}
+                onError={resetTurnstile}
+                onExpire={resetTurnstile}
               />
             </div>
           )}
