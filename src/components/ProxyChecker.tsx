@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CheckCircle2, RefreshCw, Play, Eraser, CheckCircle, XCircle, Activity, Info, ChevronLeft } from 'lucide-react';
 import { proxiesApi } from '../api';
+import { stripProxyConnectionScheme } from '../utils/proxyConnectionString';
 import AutoDismissAlert from './AutoDismissAlert';
 
 interface CheckResult {
@@ -36,7 +37,11 @@ const ProxyChecker: React.FC<ProxyCheckerProps> = ({ initialProxiesFromStore = n
 
   useEffect(() => {
     if (initialProxiesFromStore != null && initialProxiesFromStore.trim() !== '') {
-      setProxyList(initialProxiesFromStore.trim());
+      const stripped = initialProxiesFromStore
+        .split(/\r?\n/)
+        .map((line) => stripProxyConnectionScheme(line))
+        .join('\n');
+      setProxyList(stripped.trim());
       onConsumeInitialProxies?.();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only apply when store has value; onConsumeInitialProxies is stable in practice
@@ -45,7 +50,7 @@ const ProxyChecker: React.FC<ProxyCheckerProps> = ({ initialProxiesFromStore = n
   const buildConnectionStrings = (): string[] => {
     const lines = proxyList
       .split(/\r?\n/)
-      .map((s) => s.trim())
+      .map((s) => stripProxyConnectionScheme(s.trim()))
       .filter(Boolean);
     const login = proxyLogin.trim();
     const password = proxyPassword.trim();

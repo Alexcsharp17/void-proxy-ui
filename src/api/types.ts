@@ -3,7 +3,8 @@
  */
 
 export interface User {
-  id: number;
+  /** API may return number (login) or string (e.g. /user/info). */
+  id: number | string;
   email?: string | null;
   name?: string;
   balance: number;
@@ -103,6 +104,13 @@ export interface Order {
   expiresAt?: string | null;
   autoRefill?: boolean;
   autoRefillAmountGb?: number | null;
+  /** SPEED tier for unlimited proxy orders */
+  selectedModifiers?: Array<{ type?: string; level?: number }>;
+  /** Nested product (GET /orders includes it) — used for speed label from modificatorLevels */
+  product?: {
+    modificatorLevels?: Record<string, Array<{ level?: number; label?: string; speed?: number }>>;
+    attributes?: { technical?: { isUnlimited?: boolean } };
+  };
 }
 
 /** Backend POST /balance returns this */

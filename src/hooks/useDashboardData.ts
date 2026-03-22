@@ -5,9 +5,19 @@ import { orderToDisplayOrder } from '../api/mappers/orders';
 import type { DisplayOrderNoIcon } from '../api/mappers/orders';
 import { toServiceType, toOrderStatus, ServiceType, OrderStatus } from '../enums/api';
 import { useAuth } from '../contexts/AuthContext';
+import type { User } from '../api';
 
 const BYTES_PER_GB = 1024 ** 3;
 const DELETION_HOURS = 48;
+
+function userHasIdentity(user: User | null | undefined): boolean {
+  if (user == null) return false;
+  const id = user.id as unknown;
+  if (id == null) return false;
+  if (typeof id === 'string' && id.trim() === '') return false;
+  if (typeof id === 'number' && !Number.isFinite(id)) return false;
+  return true;
+}
 
 export interface DashboardData {
   usage?: {
@@ -89,7 +99,7 @@ export function useDashboardData(): {
 
   const load = useCallback(
     async (options?: { showLoading?: boolean }) => {
-      if (!user?.id) {
+      if (!userHasIdentity(user)) {
         setOrders([]);
         setLoadingOrders(false);
         setLoadingBalance(false);

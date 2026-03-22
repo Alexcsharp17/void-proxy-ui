@@ -1,40 +1,33 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'motion/react';
 import { Globe, RefreshCw, FileText, Copy, Download, ChevronDown, ChevronLeft, CheckCircle2, Save } from 'lucide-react';
+import CodeMirror from '@uiw/react-codemirror';
+import { Compartment } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 import CustomSelect from './CustomSelect';
+import CountrySearchDropdown from './CountrySearchDropdown';
 import AutoDismissAlert from './AutoDismissAlert';
-import { ordersApi, type Order } from '../api';
+import { ordersApi, publicApi, type Order } from '../api';
+import { VOID_PROXY_COUNTRIES } from '../utils/voidProxyCountries';
 import { toServiceType, ServiceType } from '../enums/api';
 import {
   parseProxyConnectionString,
   generateProxyConnectionString,
   generateShortSessionId,
+  stripProxyConnectionSchemeFromText,
   type ProxyProtocol,
 } from '../utils/proxyConnectionString';
+import { proxyListEditorTheme, proxyPendingHighlightExtension } from '../utils/proxyListCodeMirror';
 
 /** Same bounds as legacy Maskify UI */
 const TTL_SECONDS_MIN = 1;
 const TTL_SECONDS_MAX = 21600;
 
-const LOCATION_TO_REGION: Record<string, string | undefined> = {
-  UK: 'uk',
-  USA: 'us',
-  Germany: 'de',
-  France: 'fr',
-  Worldwide: undefined,
-};
-
 function sessionTypeToConnectionType(sessionType: string): 'sticky' | 'random' | 'rotation' | null {
   if (sessionType === 'Rotating session') return 'rotation';
   if (sessionType === 'Random session') return 'random';
   return 'sticky';
-}
-
-function protocolLabelToApi(protocol: string): ProxyProtocol {
-  if (protocol === 'HTTP') return 'http';
-  if (protocol === 'SOCKS5') return 'socks';
-  return 'none';
 }
 
 function normalizeVoidHost(host: string): string {
@@ -48,17 +41,18 @@ function normalizeVoidHost(host: string): string {
 function applyGeneratorOptionsToCredentials(
   lines: string[],
   sessionType: string,
-  location: string,
+  /** Uppercase region code (US, DE) or '' for worldwide / no -region- */
+  selectedRegionCode: string,
   ttlSeconds: number,
-  protocolLabel: string
+  protocol: ProxyProtocol
 ): string[] {
   const connectionType = sessionTypeToConnectionType(sessionType);
-  const region = LOCATION_TO_REGION[location];
+  const region =
+    selectedRegionCode.trim() === '' ? undefined : selectedRegionCode.trim().toLowerCase();
   const ttlMin =
     ttlSeconds >= 60
       ? Math.max(1, Math.min(1440, Math.floor(ttlSeconds / 60)))
       : undefined;
-  const proto = protocolLabelToApi(protocolLabel);
 
   return lines.map((line) => {
     const parsed = parseProxyConnectionString(line);
@@ -75,9 +69,40 @@ function applyGeneratorOptionsToCredentials(
       region: region || undefined,
       city: undefined,
       ttl: ttlMin,
-      protocol: proto,
+      protocol,
     });
   });
+}
+
+/**
+ * GET /sub-credentials may return rows with credentialsString null until Redis/Void sync.
+ * generateSubCredentials returns only the strings from this request (length = count), not the full list.
+ * Align generated[] to the last `genLen` rows (new/restored batch), after preferring credentialsString from each row.
+ */
+function mergeRawCredentialLines(
+  rows: Array<{ credentialsString?: string | null }> | undefined,
+  fromGenerate: string[] | undefined
+): string[] {
+  const gen = (fromGenerate ?? []).map((s) => String(s).trim()).filter(Boolean);
+  if (!rows?.length) return gen;
+
+  const genLen = gen.length;
+  const batchStart = Math.max(0, rows.length - genLen);
+  const out: string[] = [];
+
+  for (let i = 0; i < rows.length; i++) {
+    const fromRow = rows[i]?.credentialsString;
+    if (typeof fromRow === 'string' && fromRow.trim()) {
+      out.push(fromRow.trim());
+      continue;
+    }
+    if (genLen > 0 && i >= batchStart) {
+      const gi = i - batchStart;
+      if (gi >= 0 && gi < genLen && gen[gi]) out.push(gen[gi]);
+    }
+  }
+  if (out.length === 0 && gen.length) return gen;
+  return out;
 }
 
 /** First GB proxy order (not unlimited) for sub-credentials generation */
@@ -103,10 +128,16 @@ const ProxyGenerator: React.FC<ProxyGeneratorProps> = ({ orderIdFromOrderList = 
   const [sessionType, setSessionType] = useState('Sticky session');
   const sessionTypeOptions = ['Sticky session', 'Random session', 'Rotating session'] as const;
   const [proxyCount, setProxyCount] = useState(1);
-  const [location, setLocation] = useState('UK');
-  const [protocol, setProtocol] = useState('HTTP');
+  /** Пустая строка = весь мир (без -region-), иначе код региона в верхнем регистре (как legacy OrderDetailsModal). */
+  const [selectedRegion, setSelectedRegion] = useState('');
+  const [availableCountries, setAvailableCountries] = useState<string[]>([]);
+  const [loadingCountries, setLoadingCountries] = useState(true);
+  const regionsInitRef = useRef(false);
+  const [protocol, setProtocol] = useState<ProxyProtocol>('none');
   const [ttl, setTtl] = useState(3600);
   const [generatedProxies, setGeneratedProxies] = useState('');
+  /** Trimmed lines from the last Generate batch — CodeMirror lines matching these render green until Save or reload. */
+  const [pendingHighlightKeys, setPendingHighlightKeys] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -122,14 +153,91 @@ const ProxyGenerator: React.FC<ProxyGeneratorProps> = ({ orderIdFromOrderList = 
 
   const formats = ['username:password@host:port', 'host:port:username:password'];
 
+  const protocolOptions = useMemo(
+    () =>
+      [
+        { value: 'none', label: t('proxyGenerator.protocolNone') },
+        { value: 'http', label: t('proxyGenerator.protocolHttp') },
+        { value: 'socks', label: t('proxyGenerator.protocolSocks5') },
+      ] as const,
+    [t]
+  );
+
   const gbOrder = useMemo(() => findFirstGbOrder(orders), [orders]);
   const effectiveOrderId = orderIdFromOrderList ?? gbOrder?.id ?? null;
   const maxToGenerate = Math.max(0, subCredsLimit - subCredsCount);
   const canGenerate = effectiveOrderId != null && maxToGenerate > 0;
   const showBackButton = orderIdFromOrderList != null && typeof onBackToOrders === 'function';
 
+  const editorViewRef = useRef<EditorView | null>(null);
+  const pendingCompartmentRef = useRef(new Compartment());
+
+  const cmExtensions = useMemo(
+    () => [
+      EditorView.lineWrapping,
+      proxyListEditorTheme,
+      pendingCompartmentRef.current.of(proxyPendingHighlightExtension(new Set())),
+    ],
+    []
+  );
+
+  useEffect(() => {
+    const view = editorViewRef.current;
+    if (!view) return;
+    view.dispatch({
+      effects: pendingCompartmentRef.current.reconfigure(
+        proxyPendingHighlightExtension(new Set(pendingHighlightKeys))
+      ),
+    });
+  }, [pendingHighlightKeys]);
+
+  /** Список регионов как в legacy UI: GET /public/available-regions, иначе VOID_PROXY_COUNTRIES. */
   useEffect(() => {
     let cancelled = false;
+    (async () => {
+      setLoadingCountries(true);
+      try {
+        const apiData = await publicApi.getAvailableRegions();
+        const fromApi = apiData?.regions?.length
+          ? apiData.regions.map((r: string) => String(r).toUpperCase())
+          : [];
+        const list = fromApi.length > 0 ? fromApi : VOID_PROXY_COUNTRIES.map((c) => c.code.toUpperCase());
+        if (cancelled) return;
+        setAvailableCountries(list);
+        if (!regionsInitRef.current) {
+          regionsInitRef.current = true;
+          setSelectedRegion(list[0] ?? '');
+        } else {
+          setSelectedRegion((prev) => {
+            if (prev === '' || list.includes(prev)) return prev;
+            return list[0] ?? '';
+          });
+        }
+      } catch {
+        if (cancelled) return;
+        const list = VOID_PROXY_COUNTRIES.map((c) => c.code.toUpperCase());
+        setAvailableCountries(list);
+        if (!regionsInitRef.current) {
+          regionsInitRef.current = true;
+          setSelectedRegion(list[0] ?? '');
+        } else {
+          setSelectedRegion((prev) => {
+            if (prev === '' || list.includes(prev)) return prev;
+            return list[0] ?? '';
+          });
+        }
+      } finally {
+        if (!cancelled) setLoadingCountries(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    setPendingHighlightKeys([]);
     if (orderIdFromOrderList != null) {
       setOrdersLoading(true);
       setSubCredsLimit(0);
@@ -197,6 +305,7 @@ const ProxyGenerator: React.FC<ProxyGeneratorProps> = ({ orderIdFromOrderList = 
         const text = res.formattedLines?.length
           ? res.formattedLines.join('\n')
           : res.data.map((r) => r.credentialsString).filter(Boolean).join('\n');
+        setPendingHighlightKeys([]);
         setGeneratedProxies(text);
       }
     } catch {
@@ -216,25 +325,34 @@ const ProxyGenerator: React.FC<ProxyGeneratorProps> = ({ orderIdFromOrderList = 
         const ttlClamped = Math.max(TTL_SECONDS_MIN, Math.min(TTL_SECONDS_MAX, ttl));
         // apply-settings expects the full visible list in DB order (same as legacy OrderDetailsModal).
         const fullRes = await ordersApi.getSubCredentials(effectiveOrderId);
-        const rawStrings =
-          fullRes.success && fullRes.data?.length
-            ? fullRes.data.map((r) => r.credentialsString).filter((s): s is string => Boolean(s))
-            : res.credentials;
+        const rawStrings = mergeRawCredentialLines(fullRes.data, res.credentials);
         const withOptions = applyGeneratorOptionsToCredentials(
           rawStrings,
           sessionType,
-          location,
+          selectedRegion,
           ttlClamped,
           protocol
         );
+        if (withOptions.length === 0) {
+          setGenerateError(t('proxyGenerator.generateEmptyLines'));
+          return;
+        }
         try {
           await ordersApi.applySubCredentialsSettings(effectiveOrderId, withOptions);
         } catch {
           // Still show locally formatted lines if apply fails
         }
         setGeneratedProxies(withOptions.join('\n'));
-        setSubCredsCount(withOptions.length);
-        await refetchSubCredentials();
+        setPendingHighlightKeys(
+          withOptions.slice(-count).map((s) => String(s).trim()).filter(Boolean)
+        );
+        if (fullRes.success) {
+          setSubCredsLimit(fullRes.limit);
+          setSubCredsCount(withOptions.length);
+        } else {
+          setSubCredsCount(withOptions.length);
+        }
+        // Do not refetch raw GET here: it can return null credentialsString and overwrite formatted lines.
       } else {
         setGenerateError('No credentials returned');
       }
@@ -349,17 +467,19 @@ const ProxyGenerator: React.FC<ProxyGeneratorProps> = ({ orderIdFromOrderList = 
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <CustomSelect
+            <CountrySearchDropdown
               label={t('proxyGenerator.location')}
-              value={location}
-              onChange={setLocation}
-              options={['UK', 'USA', 'Germany', 'France', 'Worldwide']}
+              selectedCountry={selectedRegion}
+              availableCountries={availableCountries}
+              isLoadingCountries={loadingCountries}
+              isDisabled={effectiveOrderId == null}
+              onCountryChange={setSelectedRegion}
             />
             <CustomSelect
               label={t('proxyGenerator.protocol')}
               value={protocol}
-              onChange={setProtocol}
-              options={['HTTP', 'SOCKS5']}
+              onChange={(v) => setProtocol(v as ProxyProtocol)}
+              options={[...protocolOptions]}
             />
           </div>
 
@@ -405,7 +525,9 @@ const ProxyGenerator: React.FC<ProxyGeneratorProps> = ({ orderIdFromOrderList = 
               {typeof onOpenProxyCheckerWithProxies === 'function' && (
                 <button
                   type="button"
-                  onClick={() => onOpenProxyCheckerWithProxies(generatedProxies)}
+                  onClick={() =>
+                    onOpenProxyCheckerWithProxies(stripProxyConnectionSchemeFromText(generatedProxies))
+                  }
                   disabled={!generatedProxies.trim()}
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border-main/20 bg-bg-panel hover:bg-bg-input hover:border-accent-primary/30 text-text-secondary hover:text-accent-primary transition-colors disabled:opacity-50 text-xs font-bold uppercase tracking-wider"
                 >
@@ -443,12 +565,36 @@ const ProxyGenerator: React.FC<ProxyGeneratorProps> = ({ orderIdFromOrderList = 
           <p className="text-[10px] text-text-muted mb-1">
             {t('proxyGenerator.saveListHint')}
           </p>
-          <textarea
-            value={generatedProxies}
-            onChange={(e) => setGeneratedProxies(e.target.value)}
-            placeholder={t('proxyGenerator.generatedPlaceholder')}
-            className="flex-1 w-full bg-bg-input/50 border border-border-main/20 rounded-xl p-4 text-xs font-mono text-accent-primary outline-none resize-none no-scrollbar min-h-[200px]"
-          />
+          <div className="rounded-xl border border-border-main/20 overflow-hidden min-h-[200px] w-full">
+            <CodeMirror
+              value={generatedProxies}
+              onChange={(v) => setGeneratedProxies(v)}
+              theme="none"
+              basicSetup={{
+                lineNumbers: false,
+                foldGutter: false,
+                highlightActiveLine: false,
+                autocompletion: false,
+                closeBrackets: false,
+                searchKeymap: false,
+                foldKeymap: false,
+                completionKeymap: false,
+                lintKeymap: false,
+              }}
+              placeholder={t('proxyGenerator.generatedPlaceholder')}
+              minHeight="200px"
+              className="text-xs font-mono w-full"
+              extensions={cmExtensions}
+              onCreateEditor={(view) => {
+                editorViewRef.current = view;
+                view.dispatch({
+                  effects: pendingCompartmentRef.current.reconfigure(
+                    proxyPendingHighlightExtension(new Set(pendingHighlightKeys))
+                  ),
+                });
+              }}
+            />
+          </div>
 
           <div className="mt-4 flex items-center justify-between">
             <div className="relative">

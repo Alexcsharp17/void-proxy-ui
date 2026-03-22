@@ -156,3 +156,21 @@ export function generateProxyConnectionString(params: ConnectionStringParams): s
 export function generateShortSessionId(): string {
   return crypto.randomUUID().replace(/-/g, '').slice(0, 8);
 }
+
+/** Убирает http(s):// или socks(5):// — бэкенд checker ожидает user:pass@host:port без префикса. */
+export function stripProxyConnectionScheme(line: string): string {
+  const s = line.trim();
+  const lower = s.toLowerCase();
+  if (lower.startsWith('socks5://')) return s.slice(9).trim();
+  if (lower.startsWith('socks://')) return s.slice(8).trim();
+  if (lower.startsWith('https://')) return s.slice(8).trim();
+  if (lower.startsWith('http://')) return s.slice(7).trim();
+  return s;
+}
+
+export function stripProxyConnectionSchemeFromText(text: string): string {
+  return text
+    .split(/\r?\n/)
+    .map((line) => stripProxyConnectionScheme(line))
+    .join('\n');
+}

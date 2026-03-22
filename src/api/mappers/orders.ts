@@ -28,6 +28,33 @@ function toDisplayStatus(status: number | string): DisplayOrder['status'] {
   return map[s] ?? 'Queued';
 }
 
+function isUnlimitedTimeProxyOrder(order: ApiOrder): boolean {
+  const bu = (order.baseUnit ?? '').toLowerCase();
+  const du = (order.displayUnit ?? '').toLowerCase();
+  if (bu === 'second' && du === 'hour') return true;
+  const tech = order.product?.attributes?.technical;
+  return tech?.isUnlimited === true;
+}
+
+function resolveUnlimitedSpeedSuffix(order: ApiOrder): string | undefined {
+  if (!isUnlimitedTimeProxyOrder(order)) return undefined;
+  const mods = order.selectedModifiers;
+  const speedMod = mods?.find((m) => String(m.type ?? '').toUpperCase() === 'SPEED');
+  const level = speedMod?.level;
+  if (level == null) return undefined;
+  const levels = order.product?.modificatorLevels?.SPEED;
+  if (Array.isArray(levels)) {
+    const match = levels.find((l) => Number(l.level) === Number(level));
+    if (match?.label) return String(match.label).trim();
+    if (match?.speed != null && Number.isFinite(Number(match.speed))) {
+      const s = Number(match.speed);
+      if (s >= 1000 && s % 1000 === 0) return `${s / 1000} Gbps`;
+      return `${s} Mbps`;
+    }
+  }
+  return undefined;
+}
+
 function getProductLabel(order: ApiOrder): string {
   const name = normalizeProductName(order.productName);
   if (name) return name;
@@ -139,11 +166,12 @@ function formatDate(dateStr: string): string {
   });
 }
 
-export type OrderProductType = 'proxies' | 'telegram' | 'other';
+export type OrderProductType = 'proxies' | 'telegram' | 'addons' | 'other';
 
 export interface DisplayOrderNoIcon extends Omit<DisplayOrder, 'icon'> {
   productType: OrderProductType;
   unlimitedTimeMeta?: { createdAt: string; effectiveLimitSeconds: number };
+  productSpeedSuffix?: string;
 }
 
 export function orderToDisplayOrder(apiOrder: ApiOrder): DisplayOrderNoIcon {
@@ -153,10 +181,13 @@ export function orderToDisplayOrder(apiOrder: ApiOrder): DisplayOrderNoIcon {
       ? 'proxies'
       : st === ServiceType.TelegramComments || st === ServiceType.TelegramLikes || st === ServiceType.TelegramFollowers
         ? 'telegram'
-        : 'other';
+        : st === ServiceType.AddOns
+          ? 'addons'
+          : 'other';
   return {
     id: String(apiOrder.id),
     product: getProductLabel(apiOrder),
+    productSpeedSuffix: resolveUnlimitedSpeedSuffix(apiOrder),
     quantity: formatQuantity(apiOrder),
     unlimitedTimeMeta: unlimitedTimeMetaForOrder(apiOrder),
     status: toDisplayStatus(apiOrder.status),

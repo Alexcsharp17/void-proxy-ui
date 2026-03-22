@@ -39,6 +39,9 @@
     --accent-primary: #648aff;
     --accent-secondary: #00ff9d;
     --accent-violet: #ddb7ff;
+    /* CodeMirror proxy list (ProxyGenerator) */
+    --cm-proxy-pending: #34d399;
+    --cm-selection-bg: rgba(100, 138, 255, 0.22);
   }
 
   :root.light {
@@ -54,6 +57,8 @@
     --accent-primary: #4f7cff;
     --accent-secondary: #00d680;
     --accent-violet: #b794f6;
+    --cm-proxy-pending: #047857;
+    --cm-selection-bg: rgba(79, 124, 255, 0.2);
   }
 
   body {

@@ -2,6 +2,7 @@ export { api, setApiToken, getApiToken, setOnUnauthorized, BASE_URL } from './cl
 export { authApi } from './auth.api';
 export { userApi, type ReferralStats } from './user.api';
 export { ordersApi } from './orders.api';
+export { publicApi, type AvailableRegionsResponse } from './public.api';
 export { proxiesApi } from './proxies.api';
 export { resellerApi, type ResellerDashboardStats } from './reseller.api';
 export { productsApi } from './products.api';

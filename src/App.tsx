@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AnimatePresence, motion } from 'motion/react';
-import { X, Globe, MessageSquare } from 'lucide-react';
+import { X, Globe, MessageSquare, Package, Layers } from 'lucide-react';
 import { RootState } from './store';
 import {
   setActivePage,
@@ -50,17 +50,26 @@ export default function App() {
 
   const orders: Order[] = useMemo(
     () =>
-      ordersNoIcon.map((o) => ({
-        id: o.id,
-        product: o.product,
-        quantity: o.quantity,
-        unlimitedTimeMeta: o.unlimitedTimeMeta,
-        status: o.status,
-        date: o.date,
-        price: o.price,
-        timeAgo: o.timeAgo,
-        icon: o.productType === 'proxies' ? <Globe className="w-4 h-4" /> : <MessageSquare className="w-4 h-4" />,
-      })),
+      ordersNoIcon.map((o) => {
+        let icon: React.ReactNode;
+        if (o.productType === 'proxies') icon = <Globe className="w-4 h-4" />;
+        else if (o.productType === 'telegram') icon = <MessageSquare className="w-4 h-4" />;
+        else if (o.productType === 'addons') icon = <Package className="w-4 h-4" />;
+        else icon = <Layers className="w-4 h-4" />;
+        return {
+          id: o.id,
+          product: o.product,
+          productSpeedSuffix: o.productSpeedSuffix,
+          quantity: o.quantity,
+          unlimitedTimeMeta: o.unlimitedTimeMeta,
+          status: o.status,
+          date: o.date,
+          price: o.price,
+          timeAgo: o.timeAgo,
+          productType: o.productType,
+          icon,
+        };
+      }),
     [ordersNoIcon]
   );
 

@@ -1,6 +1,47 @@
 import { api } from './client';
 import type { Order, PagedList } from './types';
 
+/** Unwrap GET /orders: backend may return `{ orders, total, page, pageSize }`, a raw array, or `{ data: ... }`. */
+export function normalizePagedOrdersResponse<T>(raw: unknown, defaultPageSize: number): PagedList<T> {
+  const empty = (): PagedList<T> => ({
+    orders: [],
+    total: 0,
+    page: 1,
+    pageSize: defaultPageSize,
+  });
+  if (raw == null) return empty();
+  if (Array.isArray(raw)) {
+    const list = raw as T[];
+    return { orders: list, total: list.length, page: 1, pageSize: defaultPageSize };
+  }
+  if (typeof raw !== 'object') return empty();
+  const d = raw as Record<string, unknown>;
+  if (Array.isArray(d.orders)) {
+    const orders = d.orders as T[];
+    return {
+      orders,
+      total: typeof d.total === 'number' ? d.total : orders.length,
+      page: typeof d.page === 'number' ? d.page : 1,
+      pageSize: typeof d.pageSize === 'number' ? d.pageSize : defaultPageSize,
+    };
+  }
+  const nested = d.data;
+  if (nested != null && typeof nested === 'object' && !Array.isArray(nested) && Array.isArray((nested as { orders?: unknown }).orders)) {
+    const inner = nested as { orders: T[]; total?: number; page?: number; pageSize?: number };
+    return {
+      orders: inner.orders,
+      total: typeof inner.total === 'number' ? inner.total : inner.orders.length,
+      page: typeof inner.page === 'number' ? inner.page : 1,
+      pageSize: typeof inner.pageSize === 'number' ? inner.pageSize : defaultPageSize,
+    };
+  }
+  if (Array.isArray(nested)) {
+    const list = nested as T[];
+    return { orders: list, total: list.length, page: 1, pageSize: defaultPageSize };
+  }
+  return empty();
+}
+
 export interface CreateOrderBody {
   serviceType: number | string;
   productId: number;
@@ -31,14 +72,11 @@ export interface SubCredentialsResponse {
 export const ordersApi = {
   /** GET /orders — пагинация на бэкенде; по умолчанию page=1, pageSize=500. */
   getOrders: async (opts?: { page?: number; pageSize?: number }): Promise<PagedList<Order>> => {
-    const res = await api.get<PagedList<Order>>('/orders', {
-      params: { page: opts?.page ?? 1, pageSize: opts?.pageSize ?? 500 },
+    const pageSize = opts?.pageSize ?? 500;
+    const res = await api.get<unknown>('/orders', {
+      params: { page: opts?.page ?? 1, pageSize },
     });
-    const d = res.data;
-    if (d && Array.isArray(d.orders)) {
-      return d;
-    }
-    return { orders: [], total: 0, page: 1, pageSize: opts?.pageSize ?? 500 };
+    return normalizePagedOrdersResponse<Order>(res.data, pageSize);
   },
 
   getSubCredentials: async (orderId: number): Promise<SubCredentialsResponse> => {

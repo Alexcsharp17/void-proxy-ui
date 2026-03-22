@@ -3,9 +3,11 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'motion/react';
 import { AlertTriangle, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import OrderRow from './OrderRow';
-import { Order } from '../types';
+import { Order, type OrderProductCategory } from '../types';
 
 const ORDERS_PER_PAGE = 5;
+
+type OrderTypeFilter = 'all' | OrderProductCategory;
 
 interface DashboardOverviewProps {
   dashboardData: any;
@@ -34,17 +36,31 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 }) => {
   const { t } = useTranslation('app');
   const [page, setPage] = useState(1);
-  const isCompact = orders.length > ORDERS_THRESHOLD_COMPACT;
+  const [orderTypeFilter, setOrderTypeFilter] = useState<OrderTypeFilter>('all');
 
-  const totalPages = useMemo(() => Math.max(1, Math.ceil(orders.length / ORDERS_PER_PAGE)), [orders.length]);
+  const filteredOrders = useMemo(() => {
+    if (orderTypeFilter === 'all') return orders;
+    return orders.filter((o) => o.productType === orderTypeFilter);
+  }, [orders, orderTypeFilter]);
+
+  const isCompact = filteredOrders.length > ORDERS_THRESHOLD_COMPACT;
+
+  const totalPages = useMemo(
+    () => Math.max(1, Math.ceil(filteredOrders.length / ORDERS_PER_PAGE)),
+    [filteredOrders.length]
+  );
   const paginatedOrders = useMemo(
-    () => orders.slice((page - 1) * ORDERS_PER_PAGE, page * ORDERS_PER_PAGE),
-    [orders, page]
+    () => filteredOrders.slice((page - 1) * ORDERS_PER_PAGE, page * ORDERS_PER_PAGE),
+    [filteredOrders, page]
   );
 
   useEffect(() => {
     if (page > totalPages) setPage(1);
   }, [page, totalPages]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [orderTypeFilter]);
 
   /** Новый заказ приходит первым с API — показываем первую страницу */
   const firstOrderId = orders[0]?.id;
@@ -192,9 +208,22 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
     <div className="flex-1 bg-bg-panel/40 backdrop-blur-xl rounded-2xl border border-border-main overflow-hidden flex flex-col">
       <div className="p-6 border-b border-border-main flex items-center justify-between">
         <h3 className="text-sm font-bold uppercase tracking-widest text-text-primary">{t('dashboard.recentOrders')}</h3>
-        <div className="flex items-center bg-bg-panel rounded-lg border border-border-main/20 px-3 py-1.5 gap-2">
-          <span className="text-[10px] font-bold text-text-secondary uppercase">{t('dashboard.orderType')}</span>
-          <span className="text-[10px] font-bold text-text-primary uppercase">{t('dashboard.allTypes')}</span>
+        <div className="flex items-center bg-bg-panel rounded-lg border border-border-main/20 px-2 py-1 gap-2 min-w-0">
+          <label htmlFor="dashboard-order-type-filter" className="text-[10px] font-bold text-text-secondary uppercase shrink-0">
+            {t('dashboard.orderType')}
+          </label>
+          <select
+            id="dashboard-order-type-filter"
+            value={orderTypeFilter}
+            onChange={(e) => setOrderTypeFilter(e.target.value as OrderTypeFilter)}
+            className="max-w-[11rem] sm:max-w-none bg-bg-input border border-border-main/30 rounded-md px-2 py-1 text-[10px] font-bold text-text-primary uppercase cursor-pointer outline-none focus:ring-1 focus:ring-accent-primary/50"
+          >
+            <option value="all">{t('dashboard.filterAll')}</option>
+            <option value="proxies">{t('dashboard.filterProxies')}</option>
+            <option value="telegram">{t('dashboard.filterTelegram')}</option>
+            <option value="addons">{t('dashboard.filterAddons')}</option>
+            <option value="other">{t('dashboard.filterOther')}</option>
+          </select>
         </div>
       </div>
       
@@ -212,11 +241,11 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 
       <div className="p-6 border-t border-border-main flex items-center justify-between bg-bg-panel/30">
         <p className="text-[10px] font-medium text-text-secondary">
-          {orders.length === 0
+          {filteredOrders.length === 0
             ? t('dashboard.noOrders')
             : totalPages > 1
-              ? `${(page - 1) * ORDERS_PER_PAGE + 1}-${Math.min(page * ORDERS_PER_PAGE, orders.length)} / ${orders.length}`
-              : t('dashboard.showingItems', { count: orders.length })}
+              ? `${(page - 1) * ORDERS_PER_PAGE + 1}-${Math.min(page * ORDERS_PER_PAGE, filteredOrders.length)} / ${filteredOrders.length}`
+              : t('dashboard.showingItems', { count: filteredOrders.length })}
         </p>
         <div className="flex items-center gap-1">
           <button

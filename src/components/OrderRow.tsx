@@ -108,7 +108,15 @@ const OrderRow: React.FC<{ order: Order; onOrderClick?: (order: Order) => void }
           )}
         </div>
         <div>
-          <p className="text-sm font-bold text-text-primary">{toText(order.product)}</p>
+          <p className="text-sm font-bold text-text-primary leading-snug">
+            <span>{toText(order.product)}</span>
+            {order.productSpeedSuffix ? (
+              <span className="text-[11px] sm:text-xs font-semibold text-text-secondary font-sans normal-case tracking-normal">
+                {' '}
+                ({toText(order.productSpeedSuffix)})
+              </span>
+            ) : null}
+          </p>
           {order.unlimitedTimeMeta ? (
             <div className="mt-0.5">
               <UnlimitedTimeUsedTotal meta={order.unlimitedTimeMeta} />
