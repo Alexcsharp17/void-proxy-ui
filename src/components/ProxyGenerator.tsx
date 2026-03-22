@@ -16,6 +16,8 @@ import {
   generateProxyConnectionString,
   generateShortSessionId,
   stripProxyConnectionSchemeFromText,
+  filterVoidProxyCredentialLinesForUi,
+  isShowableVoidProxyCredentialLine,
   type ProxyProtocol,
 } from '../utils/proxyConnectionString';
 import { proxyListEditorTheme, proxyPendingHighlightExtension } from '../utils/proxyListCodeMirror';
@@ -101,8 +103,8 @@ function mergeRawCredentialLines(
       if (gi >= 0 && gi < genLen && gen[gi]) out.push(gen[gi]);
     }
   }
-  if (out.length === 0 && gen.length) return gen;
-  return out;
+  if (out.length === 0 && gen.length) return gen.filter((line) => isShowableVoidProxyCredentialLine(line));
+  return out.filter((line) => isShowableVoidProxyCredentialLine(line));
 }
 
 /** First GB proxy order (not unlimited) for sub-credentials generation */
@@ -206,7 +208,7 @@ const ProxyGenerator: React.FC<ProxyGeneratorProps> = ({ orderIdFromOrderList = 
         setAvailableCountries(list);
         if (!regionsInitRef.current) {
           regionsInitRef.current = true;
-          setSelectedRegion(list[0] ?? '');
+          setSelectedRegion('');
         } else {
           setSelectedRegion((prev) => {
             if (prev === '' || list.includes(prev)) return prev;
@@ -219,7 +221,7 @@ const ProxyGenerator: React.FC<ProxyGeneratorProps> = ({ orderIdFromOrderList = 
         setAvailableCountries(list);
         if (!regionsInitRef.current) {
           regionsInitRef.current = true;
-          setSelectedRegion(list[0] ?? '');
+          setSelectedRegion('');
         } else {
           setSelectedRegion((prev) => {
             if (prev === '' || list.includes(prev)) return prev;
@@ -249,10 +251,12 @@ const ProxyGenerator: React.FC<ProxyGeneratorProps> = ({ orderIdFromOrderList = 
             if (res.success) {
               setSubCredsLimit(res.limit);
               setSubCredsCount(res.data.length);
-              const existing = res.formattedLines?.length
-                ? res.formattedLines.join('\n')
-                : res.data.map((r) => r.credentialsString).filter(Boolean).join('\n');
-              if (existing) setGeneratedProxies(existing);
+              const existing = filterVoidProxyCredentialLinesForUi(
+                res.formattedLines?.length
+                  ? res.formattedLines.join('\n')
+                  : res.data.map((r) => r.credentialsString).filter(Boolean).join('\n')
+              );
+              setGeneratedProxies(existing);
             } else {
               setSubCredsLimit(0);
               setSubCredsCount(0);
@@ -282,10 +286,12 @@ const ProxyGenerator: React.FC<ProxyGeneratorProps> = ({ orderIdFromOrderList = 
               if (!cancelled && res.success) {
                 setSubCredsLimit(res.limit);
                 setSubCredsCount(res.data.length);
-                const existing = res.formattedLines?.length
-                  ? res.formattedLines.join('\n')
-                  : res.data.map((r) => r.credentialsString).filter(Boolean).join('\n');
-                if (existing) setGeneratedProxies(existing);
+                const existing = filterVoidProxyCredentialLinesForUi(
+                  res.formattedLines?.length
+                    ? res.formattedLines.join('\n')
+                    : res.data.map((r) => r.credentialsString).filter(Boolean).join('\n')
+                );
+                setGeneratedProxies(existing);
               }
             })
             .catch(() => {});
@@ -302,9 +308,11 @@ const ProxyGenerator: React.FC<ProxyGeneratorProps> = ({ orderIdFromOrderList = 
       if (res.success) {
         setSubCredsLimit(res.limit);
         setSubCredsCount(res.data.length);
-        const text = res.formattedLines?.length
-          ? res.formattedLines.join('\n')
-          : res.data.map((r) => r.credentialsString).filter(Boolean).join('\n');
+        const text = filterVoidProxyCredentialLinesForUi(
+          res.formattedLines?.length
+            ? res.formattedLines.join('\n')
+            : res.data.map((r) => r.credentialsString).filter(Boolean).join('\n')
+        );
         setPendingHighlightKeys([]);
         setGeneratedProxies(text);
       }

@@ -2,8 +2,8 @@
  * Connection string helpers (aligned with legacy ui/src/utils/proxyConnectionString.ts).
  * Format: [protocol://]user-USERNAME[-params]:password@host:port
  *
- * Void gateway: «rotation» uses -session-RANDOM (not -rotate); -rotate is rejected with 407 for same credentials.
- * Parser still accepts legacy usernames containing -rotate.
+ * Void gateway: country via **-country-XX** (not legacy -region-XX). «rotation» uses -session-RANDOM (not -rotate).
+ * Legacy lines with -region- are not shown in UI; they drop on next save.
  */
 
 export type ProxyProtocol = 'http' | 'socks' | 'none';
@@ -80,9 +80,9 @@ export function parseProxyConnectionString(connectionString: string): ParsedConn
     }
   }
 
-  const regionMatch = username.match(/-region-([a-z]{2})/i);
-  if (regionMatch) {
-    region = regionMatch[1].toLowerCase();
+  const countryMatch = username.match(/-country-([a-z]{2})/i);
+  if (countryMatch) {
+    region = countryMatch[1].toLowerCase();
   }
 
   const cityMatch = username.match(/-city-([^-]+)/);
@@ -99,6 +99,7 @@ export function parseProxyConnectionString(connectionString: string): ParsedConn
     .replace(/-rotate/g, '')
     .replace(/-session-[^-]+/g, '')
     .replace(/-region-[a-z]{2}/gi, '')
+    .replace(/-country-[a-z]{2}/gi, '')
     .replace(/-city-[^-]+/g, '')
     .replace(/-ttl-\d+/g, '');
 
@@ -123,7 +124,7 @@ export function generateProxyConnectionString(params: ConnectionStringParams): s
   const parts: string[] = [];
 
   if (region && region.trim()) {
-    parts.push(`-region-${region.toLowerCase()}`);
+    parts.push(`-country-${region.toLowerCase()}`);
   }
 
   if (city && city.trim()) {
@@ -172,5 +173,22 @@ export function stripProxyConnectionSchemeFromText(text: string): string {
   return text
     .split(/\r?\n/)
     .map((line) => stripProxyConnectionScheme(line))
+    .join('\n');
+}
+
+/** Void: hide legacy `-region-` lines; they are removed from DB on next successful save of the list. */
+export function isShowableVoidProxyCredentialLine(line: string): boolean {
+  const raw = line.trim();
+  if (!raw) return false;
+  if (!raw.toLowerCase().includes('void-proxy.com')) return true;
+  if (/-region-/i.test(raw)) return false;
+  return parseProxyConnectionString(stripProxyConnectionScheme(raw)) !== null;
+}
+
+export function filterVoidProxyCredentialLinesForUi(text: string): string {
+  return text
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter((l) => l && isShowableVoidProxyCredentialLine(l))
     .join('\n');
 }
