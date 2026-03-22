@@ -1,6 +1,9 @@
 /**
  * Connection string helpers (aligned with legacy ui/src/utils/proxyConnectionString.ts).
  * Format: [protocol://]user-USERNAME[-params]:password@host:port
+ *
+ * Void gateway: «rotation» uses -session-RANDOM (not -rotate); -rotate is rejected with 407 for same credentials.
+ * Parser still accepts legacy usernames containing -rotate.
  */
 
 export type ProxyProtocol = 'http' | 'socks' | 'none';
@@ -128,9 +131,7 @@ export function generateProxyConnectionString(params: ConnectionStringParams): s
     parts.push(`-city-${cityName}`);
   }
 
-  if (connectionType === 'rotation') {
-    parts.push('-rotate');
-  } else if (connectionType === 'random') {
+  if (connectionType === 'rotation' || connectionType === 'random') {
     parts.push('-session-RANDOM');
   } else if (connectionType === 'sticky' && sessionName && sessionName.trim()) {
     const validSessionName = sessionName.trim().replace(/[^a-zA-Z0-9_]/g, '');
