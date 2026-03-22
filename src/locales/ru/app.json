@@ -326,7 +326,7 @@
   },
   "proxyGenerator": {
     "backToOrders": "К списку заказов",
-    "checkInProxyChecker": "Проверить в Proxy Checker",
+    "checkInProxyChecker": "Proxy Checker",
     "proxyConfig": "Настройка прокси",
     "sessionType": "Тип сессии",
     "proxyCount": "Количество прокси",
@@ -351,11 +351,16 @@
     "generating": "Генерация...",
     "generateProxies": "Сгенерировать прокси",
     "generatedPlaceholder": "Здесь появится список прокси...",
-    "proxiesCount": "Прокси: {{count}}",
+    "proxiesCount": "{{count}} прокси",
+    "proxiesCountRemove": "убрать {{n}}",
+    "proxiesCountAdd": "добавить {{n}}",
+    "proxiesCountAddRemove": "добавить {{add}}, убрать {{remove}}",
     "maxTtl": "Максимум 21600 секунд",
     "saveList": "Сохранить список",
-    "saveListHint": "Отредактируйте список и нажмите «Сохранить» — в списке останутся только эти строки. Удалённые строки скрываются и освобождают слоты для новой генерации.",
-    "generateEmptyLines": "Не удалось собрать строки прокси из ответа сервера. Попробуйте ещё раз."
+    "clearAll": "Удалить все прокси из списка",
+    "clearAllConfirm": "Убрать все прокси по этому заказу? Они будут скрыты, можно будет сгенерировать новые.",
+    "generateEmptyLines": "Не удалось собрать строки прокси из ответа сервера. Попробуйте ещё раз.",
+    "saveValidationError": "Исправьте или удалите {{count}} некорректную(ых) строку(и) перед сохранением."
   },
   "support": {
     "title": "Поддержка",

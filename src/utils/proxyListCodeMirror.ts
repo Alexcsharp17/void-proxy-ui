@@ -1,11 +1,22 @@
-import type { Extension } from '@codemirror/state';
+import type { Extension, Range } from '@codemirror/state';
 import { Decoration, DecorationSet, EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
+export interface ProxyLineDecorationsOptions {
+  /** Green: lines from last generate batch (trim match). */
+  pendingHighlight: ReadonlySet<string>;
+  /** Red strikethrough: marked for removal until Save. */
+  pendingDelete: ReadonlySet<string>;
+  /** Amber: failed save validation (trim match). */
+  invalidLines: ReadonlySet<string>;
+}
+
 /**
- * Green line highlight for proxy strings that match the last generated batch (trimmed equality).
+ * Line decorations: invalid (save validation) > pending delete > pending highlight.
  */
-export function proxyPendingHighlightExtension(pending: ReadonlySet<string>): Extension {
-  const pendingSet = pending;
+export function proxyLineDecorationsExtension(options: ProxyLineDecorationsOptions): Extension {
+  const hi = options.pendingHighlight;
+  const del = options.pendingDelete;
+  const inv = options.invalidLines;
 
   return ViewPlugin.fromClass(
     class {
@@ -24,11 +35,16 @@ export function proxyPendingHighlightExtension(pending: ReadonlySet<string>): Ex
 
   function build(view: EditorView): DecorationSet {
     const doc = view.state.doc;
-    const out: Parameters<typeof Decoration.set>[0] = [];
+    const out: Range<Decoration>[] = [];
     for (let i = 1; i <= doc.lines; i++) {
       const line = doc.line(i);
       const t = line.text.trim();
-      if (t && pendingSet.has(t)) {
+      if (!t) continue;
+      if (inv.has(t)) {
+        out.push(Decoration.line({ class: 'cm-proxy-line-invalid' }).range(line.from));
+      } else if (del.has(t)) {
+        out.push(Decoration.line({ class: 'cm-proxy-line-pending-delete' }).range(line.from));
+      } else if (hi.has(t)) {
         out.push(Decoration.line({ class: 'cm-proxy-line-pending' }).range(line.from));
       }
     }
@@ -52,9 +68,22 @@ export const proxyListEditorTheme = EditorView.theme({
   },
   '.cm-line': {
     color: 'var(--accent-primary)',
+    paddingBottom: '3px',
   },
   '.cm-line.cm-proxy-line-pending': {
     color: 'var(--cm-proxy-pending)',
+  },
+  '.cm-line.cm-proxy-line-pending-delete': {
+    color: 'rgb(248 113 113)',
+    textDecoration: 'line-through',
+    textDecorationColor: 'rgb(248 113 113 / 0.85)',
+    opacity: '0.92',
+  },
+  '.cm-line.cm-proxy-line-invalid': {
+    color: 'rgb(251 191 36)',
+    backgroundColor: 'rgb(251 191 36 / 0.09)',
+    boxShadow: 'inset 0 0 0 1px rgb(251 191 36 / 0.45)',
+    borderRadius: '4px',
   },
   '&.cm-focused': {
     outline: 'none',

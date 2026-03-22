@@ -324,7 +324,7 @@
   },
   "proxyGenerator": {
     "backToOrders": "Back to orders",
-    "checkInProxyChecker": "Check in Proxy Checker",
+    "checkInProxyChecker": "Proxy Checker",
     "proxyConfig": "Proxy Configuration",
     "sessionType": "Session Type",
     "proxyCount": "Number of Proxies",
@@ -350,10 +350,15 @@
     "generateProxies": "Generate Proxies",
     "generatedPlaceholder": "Generated proxies will appear here...",
     "proxiesCount": "{{count}} Proxies",
+    "proxiesCountRemove": "remove {{n}}",
+    "proxiesCountAdd": "add {{n}}",
+    "proxiesCountAddRemove": "add {{add}}, remove {{remove}}",
     "maxTtl": "Maximum 21600 seconds",
     "saveList": "Save list",
-    "saveListHint": "Edit the list and click Save to keep only these lines visible. Removed lines are hidden and free slots for new generation.",
-    "generateEmptyLines": "Could not assemble proxy lines from the server response. Please try again."
+    "clearAll": "Remove all proxies from the list",
+    "clearAllConfirm": "Remove all proxies from this order? They will be hidden and you can generate new ones.",
+    "generateEmptyLines": "Could not assemble proxy lines from the server response. Please try again.",
+    "saveValidationError": "Fix or remove {{count}} invalid line(s) before saving."
   },
   "support": {
     "title": "Support",

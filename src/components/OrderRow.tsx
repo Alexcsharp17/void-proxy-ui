@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Order } from '../types';
+import { HoverTooltip } from './HoverTooltip';
 import { formatUnlimitedTimeRatioPart } from '../api/mappers/orders';
 
 type UnlimitedMeta = NonNullable<Order['unlimitedTimeMeta']>;
@@ -74,7 +75,6 @@ function getStatusIconStyles(status: Order['status']): { container: string; tool
 
 const OrderRow: React.FC<{ order: Order; onOrderClick?: (order: Order) => void }> = ({ order, onOrderClick }) => {
   const { t } = useTranslation('app');
-  const [showTooltip, setShowTooltip] = useState(false);
   const statusStyles = getStatusIconStyles(order.status);
   const statusLabel = toText(order.status);
 
@@ -86,27 +86,15 @@ const OrderRow: React.FC<{ order: Order; onOrderClick?: (order: Order) => void }
       onKeyDown={onOrderClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOrderClick(order); } } : undefined}
       className={`flex items-center justify-between p-6 border-b border-border-main/10 transition-colors group ${onOrderClick ? 'cursor-pointer hover:bg-bg-input/30' : ''}`}
     >
-      <div
-        className="flex items-center gap-4"
-        onMouseEnter={() => setShowTooltip(true)}
-        onMouseLeave={() => setShowTooltip(false)}
-      >
-        <div className="relative shrink-0">
+      <div className="flex items-center gap-4">
+        <HoverTooltip content={statusLabel} openWhen={!!statusLabel} className="shrink-0">
           <div
             className={`w-10 h-10 rounded-xl border flex items-center justify-center transition-colors cursor-default ${statusStyles.container}`}
             aria-label={statusLabel}
           >
             {order.icon}
           </div>
-          {showTooltip && statusLabel && (
-            <div
-              className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2.5 py-1.5 rounded-lg bg-bg-panel border border-border-main shadow-lg text-[10px] font-bold uppercase tracking-wider text-text-primary whitespace-nowrap z-10 pointer-events-none"
-              role="tooltip"
-            >
-              {statusLabel}
-            </div>
-          )}
-        </div>
+        </HoverTooltip>
         <div>
           <p className="text-sm font-bold text-text-primary leading-snug">
             <span>{toText(order.product)}</span>

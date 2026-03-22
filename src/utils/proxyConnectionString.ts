@@ -185,6 +185,25 @@ export function isShowableVoidProxyCredentialLine(line: string): boolean {
   return parseProxyConnectionString(stripProxyConnectionScheme(raw)) !== null;
 }
 
+/** Non-empty line that can be saved (parseable credential, not legacy hidden void line). */
+export function isCredentialLineValidForSave(line: string): boolean {
+  const raw = line.trim();
+  if (!raw) return false;
+  if (!isShowableVoidProxyCredentialLine(raw)) return false;
+  return parseProxyConnectionString(stripProxyConnectionScheme(raw)) !== null;
+}
+
+/** Trimmed lines that fail {@link isCredentialLineValidForSave} (unique). */
+export function getInvalidCredentialLineKeys(lines: readonly string[]): string[] {
+  const bad = new Set<string>();
+  for (const line of lines) {
+    const t = line.trim();
+    if (!t) continue;
+    if (!isCredentialLineValidForSave(t)) bad.add(t);
+  }
+  return Array.from(bad);
+}
+
 export function filterVoidProxyCredentialLinesForUi(text: string): string {
   return text
     .split(/\r?\n/)

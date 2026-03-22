@@ -32,7 +32,7 @@ interface AppState {
   purchaseSegment: PurchaseSegment;
   /** When set, Proxy Generator opens with this order's sub-credentials (e.g. from Recent Orders click). */
   proxyGeneratorOrderId: number | null;
-  /** When set, Proxy Checker opens with this list pre-filled (e.g. from Proxy Generator "Check in Proxy Checker"). */
+  /** When set, Proxy Checker opens with this list pre-filled (e.g. from Proxy Generator). */
   proxyCheckerInitialProxies: string | null;
 }
 
