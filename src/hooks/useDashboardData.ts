@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { ordersApi, userApi } from '../api';
 import type { Order as ApiOrder } from '../api';
 import { orderToDisplayOrder } from '../api/mappers/orders';
@@ -9,6 +9,16 @@ import type { User } from '../api';
 
 const BYTES_PER_GB = 1024 ** 3;
 const DELETION_HOURS = 48;
+
+/** Сколько раз дернуть GET /orders подряд при сетевых/5xx сбоях */
+const ORDERS_FETCH_MAX_ATTEMPTS = 5;
+/** Пауза перед повтором: 2s, 4s, 8s, 16s (после 1–4 неудач) */
+function ordersRetryDelayMs(attemptIndex: number): number {
+  return Math.min(2000 * 2 ** attemptIndex, 20_000);
+}
+
+/** Если заказы так и не загрузились — тихий refetch раз в минуту, пока пользователь на странице */
+const ORDERS_BACKGROUND_RETRY_MS = 60_000;
 
 function userHasIdentity(user: User | null | undefined): boolean {
   if (user == null) return false;
@@ -86,7 +96,7 @@ export function useDashboardData(): {
   showDeletionBanner: boolean;
   deletionCountdown: string;
   /** Перезагрузка заказов и баланса параллельно, без блокировки друг друга. `{ showLoading: false }` — без спиннеров. */
-  refetch: (options?: { showLoading?: boolean }) => Promise<void>;
+  refetch: (options?: { showLoading?: boolean; ordersMaxAttempts?: number }) => Promise<void>;
 } {
   const { user } = useAuth();
   const [orders, setOrders] = useState<ApiOrder[]>([]);
@@ -97,15 +107,23 @@ export function useDashboardData(): {
   const [error, setError] = useState<string | null>(null);
   const [deletionCountdown, setDeletionCountdown] = useState('00:00:00');
 
+  /** Инкремент на каждый вызов load — отменяет устаревшие retry после смены user / unmount */
+  const loadSessionRef = useRef(0);
+
   const load = useCallback(
-    async (options?: { showLoading?: boolean }) => {
+    async (options?: { showLoading?: boolean; ordersMaxAttempts?: number }) => {
       if (!userHasIdentity(user)) {
         setOrders([]);
         setLoadingOrders(false);
         setLoadingBalance(false);
         return;
       }
+      const session = ++loadSessionRef.current;
       const showLoading = options?.showLoading !== false;
+      const maxOrderAttempts =
+        options?.ordersMaxAttempts != null
+          ? Math.max(1, options.ordersMaxAttempts)
+          : ORDERS_FETCH_MAX_ATTEMPTS;
       if (showLoading) {
         setLoadingOrders(true);
         setLoadingBalance(true);
@@ -115,36 +133,50 @@ export function useDashboardData(): {
       const sortOrders = (list: ApiOrder[]) =>
         [...list].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-      const ordersPromise = ordersApi
-        .getOrders({ page: 1, pageSize: 500 })
-        .then((ordersRes) => {
-          const list = ordersRes?.orders ?? [];
-          setOrders(sortOrders(list));
-          setError(null);
-        })
-        .catch((e: unknown) => {
-          setError(e instanceof Error ? e.message : 'Failed to load orders');
-        })
-        .finally(() => {
-          if (showLoading) setLoadingOrders(false);
-        });
-
       const balancePromise = userApi
         .getBalance()
         .then((balanceRes) => {
+          if (session !== loadSessionRef.current) return;
           if (balanceRes?.success !== false) {
             setBalance(balanceRes.balance ?? 0);
             setCurrency(balanceRes.currency ?? 'USD');
           }
         })
         .catch(() => {
+          if (session !== loadSessionRef.current) return;
           setBalance((b) => (b == null ? 0 : b));
         })
         .finally(() => {
-          if (showLoading) setLoadingBalance(false);
+          if (showLoading && session === loadSessionRef.current) setLoadingBalance(false);
         });
 
-      await Promise.all([ordersPromise, balancePromise]);
+      let lastOrdersError = 'Failed to load orders';
+      try {
+        for (let attempt = 0; attempt < maxOrderAttempts; attempt++) {
+          if (session !== loadSessionRef.current) return;
+          try {
+            const ordersRes = await ordersApi.getOrders({ page: 1, pageSize: 500 });
+            if (session !== loadSessionRef.current) return;
+            const list = ordersRes?.orders ?? [];
+            setOrders(sortOrders(list));
+            setError(null);
+            lastOrdersError = '';
+            break;
+          } catch (e: unknown) {
+            lastOrdersError = e instanceof Error ? e.message : 'Failed to load orders';
+            const hasMoreAttempts = attempt < maxOrderAttempts - 1;
+            if (hasMoreAttempts && session === loadSessionRef.current) {
+              await new Promise((r) => setTimeout(r, ordersRetryDelayMs(attempt)));
+            } else if (session === loadSessionRef.current) {
+              setError(lastOrdersError);
+            }
+          }
+        }
+      } finally {
+        if (showLoading && session === loadSessionRef.current) setLoadingOrders(false);
+      }
+
+      await balancePromise;
     },
     [user?.id]
   );
@@ -153,11 +185,23 @@ export function useDashboardData(): {
     void load();
   }, [load]);
 
+  /** Пока висит ошибка заказов и список пуст — периодически повторять (без спиннера) */
+  useEffect(() => {
+    if (!userHasIdentity(user)) return;
+    if (error == null || error === '') return;
+    if (orders.length > 0) return;
+
+    const id = window.setInterval(() => {
+      void load({ showLoading: false, ordersMaxAttempts: 1 });
+    }, ORDERS_BACKGROUND_RETRY_MS);
+    return () => window.clearInterval(id);
+  }, [error, orders.length, user, load]);
+
   /** После curl / другого окна — обновить список при возврате на вкладку */
   useEffect(() => {
     const onVisible = () => {
       if (document.visibilityState === 'visible' && user?.id) {
-        void load({ showLoading: false });
+        void load({ showLoading: false, ordersMaxAttempts: 3 });
       }
     };
     document.addEventListener('visibilitychange', onVisible);
